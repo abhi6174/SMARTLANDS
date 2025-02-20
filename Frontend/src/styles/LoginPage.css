@@ -1,0 +1,149 @@
+/* General Reset */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f4f7fc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Login Page Container */
+.login-page {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Header */
+.page-header h1 {
+  font-size: 24px;
+  color: #037dd6;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* Navigation Bar */
+.navbar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.navbar button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 10px;
+  color: #666;
+  transition: color 0.3s;
+}
+
+.navbar button.active {
+  font-weight: 600;
+  color: #037dd6;
+  border-bottom: 2px solid #037dd6;
+}
+
+/* Content Container */
+.content-container {
+  width: 100%;
+}
+
+/* Login Form */
+.login-form h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* MetaMask Button */
+.metamask-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.metamask-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background-color: #037dd6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+  width: 100%;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.metamask-button:hover {
+  background-color: #0260a4;
+}
+
+.metamask-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Wallet Icon */
+.wallet-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Account Info */
+.account-info {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.success-text {
+  color: #10b981;
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.account-text {
+  font-family: monospace;
+  word-break: break-word;
+  color: #4b5563;
+  font-size: 14px;
+  background: #f3f4f6;
+  padding: 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Error Alert */
+.error-alert {
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-page {
+    width: 90%;
+    padding: 20px;
+  }
+}
