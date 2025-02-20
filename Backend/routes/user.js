@@ -5,7 +5,7 @@ const { handleGetAllUsers,handleGetUserById,handleUpdateUserById,handleCreateNew
 
 router.route("/")
     .get(handleGetAllUsers)
-    .patch(handleCreateNewUser)
+    .post(handleCreateNewUser)
 
 router.route('/:id')
     .get(handleGetUserById)

@@ -3,7 +3,7 @@ async function handleGetAllUsers(req,res){
     const allusers= await User.find({})
     return res.json(allusers)
 }
-async function handleGetUserById(req,res){     
+async function handleGetUserById(req,res){    
     const user= await User.findById(req.params.id)
     if(!user) return res.status(201).json({error:"user not found"})
     return res.json(user);
@@ -13,9 +13,10 @@ async function handleUpdateUserById(req,res){
     return res.json({status:"success"});
 }
 async function handleCreateNewUser(req,res){
+    body=req.body;
     console.log(body)
     if(
-        !body||
+        !body|| 
         !body.name||
         !body.email
     ){
