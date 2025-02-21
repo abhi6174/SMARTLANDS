@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/LoginPage.css";
+import mockUsers from "../data/mockUsers"; // Import mock wallet addresses
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [account, setAccount] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
 
@@ -13,66 +14,73 @@ const LoginPage = () => {
     checkIfWalletIsConnected();
   }, []);
 
+  // Check if the wallet is already connected
   const checkIfWalletIsConnected = async () => {
     try {
-        const { ethereum } = window;
-        if (!ethereum) {
-            setError("Please install MetaMask!");
-            return;
-        }
+      const { ethereum } = window;
+      if (!ethereum) {
+        setError("Please install MetaMask!");
+        return;
+      }
 
-        const accounts = await ethereum.request({ method: "eth_accounts" });
-        const storedAccount = localStorage.getItem("connectedAccount");
+      const accounts = await ethereum.request({ method: "eth_accounts" });
+      const storedAccount = localStorage.getItem("connectedAccount");
 
-        if (accounts.length > 0 && storedAccount === accounts[0]) {
-            setAccount(accounts[0]);
-
-            // ✅ Only navigate if stored session matches
-            if (window.location.pathname !== "/user") {
-                navigate("/user");
-            }
+      if (accounts.length > 0 && storedAccount === accounts[0]) {
+        if (isAuthorized(accounts[0])) {
+          setAccount(accounts[0]);
+          navigate("/user");
         } else {
-            localStorage.removeItem("connectedAccount"); // Remove if no valid account found
+          localStorage.removeItem("connectedAccount");
+          setError("Unauthorized wallet! Access denied.");
         }
+      }
     } catch (error) {
-        setError("Error checking MetaMask connection");
-        console.error(error);
+      setError("Error checking MetaMask connection");
+      console.error(error);
     }
   };
 
+  // Check if the wallet is in mock data
+  const isAuthorized = (walletAddress) => {
+    return mockUsers.some(user => user.wallet.toLowerCase() === walletAddress.toLowerCase());
+  };
 
+  // Connect MetaMask and verify wallet
   const connectWallet = async (e) => {
     e.preventDefault();
     try {
-        setIsLoading(true);
-        setError("");
+      setIsLoading(true);
+      setError("");
 
-        const { ethereum } = window;
-        if (!ethereum) {
-            setError("Please install MetaMask!");
-            return;
-        }
+      const { ethereum } = window;
+      if (!ethereum) {
+        setError("Please install MetaMask!");
+        return;
+      }
 
-        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
 
-        if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            localStorage.setItem("connectedAccount", accounts[0]); // ✅ Store session
+      if (accounts.length > 0) {
+        const walletAddress = accounts[0];
 
-            setTimeout(() => {
-                navigate("/user");
-            }, 500);
+        if (isAuthorized(walletAddress)) {
+          setAccount(walletAddress);
+          localStorage.setItem("connectedAccount", walletAddress);
+          setTimeout(() => navigate("/user"), 500);
         } else {
-            setError("No accounts found. Please try again.");
+          setError("Unauthorized wallet! Access denied.");
         }
+      } else {
+        setError("No accounts found. Please try again.");
+      }
     } catch (error) {
-        console.error(error);
-        setError("Error connecting to MetaMask");
+      console.error(error);
+      setError("Error connecting to MetaMask");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
-
 
   const renderContent = () => {
     switch (activeTab) {
@@ -80,28 +88,18 @@ const LoginPage = () => {
         return (
           <form className="login-form" onSubmit={connectWallet}>
             <h2>Login with MetaMask</h2>
-            {error && (
-              <div className="error-alert">
-                {error}
-              </div>
-            )}
+            {error && <div className="error-alert">{error}</div>}
             <div className="metamask-section">
               {!account ? (
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="action-button metamask-button"
                   disabled={isLoading}
                 >
-                  <svg 
-                    className="wallet-icon" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2"
-                  >
+                  <svg className="wallet-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M19 7h-3V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
                   </svg>
-                  {isLoading ? 'Connecting...' : 'Connect with MetaMask'}
+                  {isLoading ? "Connecting..." : "Connect with MetaMask"}
                 </button>
               ) : (
                 <div className="account-info">

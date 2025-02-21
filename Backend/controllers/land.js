@@ -34,8 +34,7 @@ const createLand = async (req, res) => {
 
     try {
         const result = await Land.create({
-            ownerName: body.ownerName,id
-
+            ownerName: body.ownerName,
             landArea: body.landArea,
             district: body.district,
             taluk: body.taluk,
