@@ -123,3 +123,16 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  .land-area-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .land-area-group input {
+    flex: 1;
+  }
+  
+  .land-area-group select {
+    width: 120px;
+  }

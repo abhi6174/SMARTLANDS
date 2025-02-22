@@ -1,22 +1,36 @@
 // src/components/MyLands.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import SearchBar from './SearchBar';
 import LandCard from './LandCard';
 import useBlockchain from '../hooks/useBlockchain';
+import '../styles/MyLands.css';
+import { useLandContext } from '../context/LandContext';
 
 const MyLands = () => {
-  const { userLands, isLoading } = useBlockchain();
+  const { userLands: blockchainLands, isLoading, account } = useBlockchain();
+  const { localLands } = useLandContext();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const allLands = [...(blockchainLands || []), ...localLands];
 
   return (
     <>
       <SearchBar />
       
       <div className="registered-lands-section">
+        <button 
+          className="register-land-button"
+          onClick={() => setIsModalOpen(true)}
+          disabled={!account}
+        >
+          Register New Land
+        </button>
+
         {isLoading ? (
           <div className="loading-indicator">Loading your land records...</div>
-        ) : userLands.length > 0 ? (
+        ) : allLands.length > 0 ? (
           <div className="lands-grid">
-            {userLands.map(land => (
+            {allLands.map(land => (
               <LandCard key={land.id} land={land} />
             ))}
           </div>

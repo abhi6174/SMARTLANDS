@@ -3,13 +3,15 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Dashboard from '../components/Dashboard';
 import MyLands from '../components/MyLands';
-import MyProfile from '../components/MyProfile';  // New import
+import MyProfile from '../components/MyProfile';
 import RegisterLandModal from '../components/RegisterLandModal';
 import '../styles/UserPage.css';
+import useBlockchain from '../hooks/useBlockchain';
 
 const UserPage = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { account } = useBlockchain(); // Get account from useBlockchain
 
   return (
     <div className="app-container">
@@ -23,7 +25,7 @@ const UserPage = () => {
         <header className="content-header">
           <h2>{activePage === 'dashboard' ? 'Dashboard' : 
                activePage === 'mylands' ? 'My Properties' : 
-               activePage === 'profile' ? 'My Profile' :      // New profile title
+               activePage === 'profile' ? 'My Profile' : 
                activePage === 'marketplace' ? 'Land Marketplace' : 
                'Account Settings'}</h2>
           <p className="blockchain-network">Network: Ethereum Testnet</p>
@@ -32,7 +34,7 @@ const UserPage = () => {
         <div className="content-container">
           {activePage === 'dashboard' && <Dashboard />}
           {activePage === 'mylands' && <MyLands />}
-          {activePage === 'profile' && <MyProfile />}         {/* New profile content */}
+          {activePage === 'profile' && <MyProfile />}
           {activePage === 'marketplace' && (
             <div className="placeholder-content">
               <h3>Land Marketplace</h3>
@@ -51,6 +53,7 @@ const UserPage = () => {
       <RegisterLandModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        account={account} // Pass account to modal
       />
     </div>
   );

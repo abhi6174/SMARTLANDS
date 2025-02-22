@@ -1,6 +1,6 @@
 // src/components/LandCard.jsx
 import React from 'react';
-
+import '../styles/LandCard.css';
 const LandCard = ({ land }) => {
   const viewLandDetails = (landId) => {
     alert(`Viewing details for property #${landId}`);
@@ -10,9 +10,10 @@ const LandCard = ({ land }) => {
     <div className="land-card">
       <h3>Property </h3>
       <div className="land-details">
-        <p><strong>Location:</strong> {land.location}</p>
-        <p><strong>Area:</strong> {land.area}</p>
-        <p><strong>Price:</strong> {land.price}</p>
+        <p><strong>Owner:</strong> {land.ownerName}</p>
+        <p><strong>Area:</strong> {land.landArea} sqft</p>
+        <p><strong>Location:</strong> {land.village}, {land.taluk}, {land.district}</p>
+        <p><strong>Block/Survey:</strong> {land.blockNo}/{land.surveyNo}</p>
         <p><strong>Registration Date:</strong> {land.registrationDate}</p>
         <p><strong>Status:</strong> 
           <span className={`status-${land.status.toLowerCase()}`}>

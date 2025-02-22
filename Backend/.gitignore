@@ -1,2 +1,4 @@
 node_modules/
-
+aggregated_output.txt  
+aggregate.js 
+.env

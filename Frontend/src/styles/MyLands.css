@@ -1,0 +1,39 @@
+.registered-lands-section {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .register-land-button {
+    padding: 10px 20px;
+    background-color: #28a745; /* Green */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  
+  .register-land-button:hover {
+    background-color: #218838; /* Darker green */
+  }
+  
+  .register-land-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .lands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .loading-indicator {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .no-lands-message {
+    font-size: 16px;
+    color: #666;
+  }

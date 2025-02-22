@@ -47,7 +47,7 @@ const createLand = async (req, res) => {
         return res.status(201).json({ msg: "Success", land: result });
     } catch (error) {
         console.error("Error creating land entry:", error);
-        return res.status(500).json({ error: "Internal Server Error" });id
+        return res.status(500).json({ error: "Internal Server Error" });
 
     }
     

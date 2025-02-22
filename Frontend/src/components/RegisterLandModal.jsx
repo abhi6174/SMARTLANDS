@@ -1,20 +1,26 @@
+// src/components/RegisterLandModal.jsx
 import React, { useState } from "react";
-import  "../styles/RegisterLandModal.css"; 
+import "../styles/RegisterLandModal.css";
+import { useLandContext } from '../context/LandContext';
 
-
-const RegisterLandModal = ({ isOpen, onClose, account, onSuccess }) => {
+const RegisterLandModal = ({ isOpen, onClose, account }) => {
+  const { addLand } = useLandContext();
   const [formData, setFormData] = useState({
-    location: "",
-    area: "",
-    price: "",
-    coordinates: "",
-    documentHash: "",
+    ownerName: "",
+    landArea: "",
+    landUnit: "SqFt",
+    district: "",
+    taluk: "",
+    village: "",
+    blockNo: "",
+    surveyNo: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Changing ${name} to ${value}`);
     setFormData({
       ...formData,
       [name]: value,
@@ -23,23 +29,29 @@ const RegisterLandModal = ({ isOpen, onClose, account, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Form submission triggered");
     setIsSubmitting(true);
     setError(null);
 
+    const newLand = {
+      ownerName: formData.ownerName,
+      landArea: formData.landArea,
+      landUnit: formData.landUnit,
+      district: formData.district,
+      taluk: formData.taluk,
+      village: formData.village,
+      blockNo: formData.blockNo,
+      surveyNo: formData.surveyNo,
+      registrationDate: new Date().toISOString().split('T')[0],
+      status: "Registered",
+      id: Date.now(),
+    };
+
+    console.log("Form Data Submitted:", { ...newLand, walletAddress: account });
+
     try {
-      // In a real application, you would send this data to your smart contract
-      console.log("Submitting new land registration:", {
-        ...formData,
-        owner: account,
-        registrationDate: new Date().toISOString().split("T")[0],
-        status: "Pending",
-      });
-
-      // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // If successful, call onSuccess callback to refresh user lands
-      onSuccess();
+      addLand(newLand); // Use context to add land
       onClose();
     } catch (error) {
       console.error("Error registering land:", error);
@@ -57,72 +69,107 @@ const RegisterLandModal = ({ isOpen, onClose, account, onSuccess }) => {
         <div className="modal-header">
           <h2>Register New Land</h2>
           <button className="close-button" onClick={onClose}>
-            &times;
+            ×
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="location">Property Location</label>
+            <label htmlFor="ownerName">Owner Name</label>
             <input
               type="text"
-              id="location"
-              name="location"
-              value={formData.location}
+              id="ownerName"
+              name="ownerName"
+              value={formData.ownerName}
               onChange={handleChange}
-              placeholder="Enter full property address"
+              placeholder="Owner name"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="area">Area (sq ft)</label>
+            <label htmlFor="landArea">Land Area</label>
+            <div className="land-area-group">
+              <input
+                type="text"
+                id="landArea"
+                name="landArea"
+                value={formData.landArea}
+                onChange={handleChange}
+                placeholder="Enter land area"
+                required
+              />
+              <select
+                name="landUnit"
+                value={formData.landUnit}
+                onChange={handleChange}
+              >
+                <option value="SqFt">Square Feet</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="district">District</label>
             <input
               type="text"
-              id="area"
-              name="area"
-              value={formData.area}
+              id="district"
+              name="district"
+              value={formData.district}
               onChange={handleChange}
-              placeholder="Enter property area"
+              placeholder="Enter district"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="price">Price (ETH)</label>
+            <label htmlFor="taluk">Taluk</label>
             <input
               type="text"
-              id="price"
-              name="price"
-              value={formData.price}
+              id="taluk"
+              name="taluk"
+              value={formData.taluk}
               onChange={handleChange}
-              placeholder="Enter property value in ETH"
+              placeholder="Enter taluk"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="coordinates">Geographic Coordinates</label>
+            <label htmlFor="village">Village</label>
             <input
               type="text"
-              id="coordinates"
-              name="coordinates"
-              value={formData.coordinates}
+              id="village"
+              name="village"
+              value={formData.village}
               onChange={handleChange}
-              placeholder="Format: XX.XXXX° N, XX.XXXX° E"
+              placeholder="Enter village"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="documentHash">Document Hash</label>
+            <label htmlFor="blockNo">Block Number</label>
             <input
               type="text"
-              id="documentHash"
-              name="documentHash"
-              value={formData.documentHash}
+              id="blockNo"
+              name="blockNo"
+              value={formData.blockNo}
               onChange={handleChange}
-              placeholder="IPFS hash or document identifier"
+              placeholder="Enter block number"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="surveyNo">Survey Number</label>
+            <input
+              type="text"
+              id="surveyNo"
+              name="surveyNo"
+              value={formData.surveyNo}
+              onChange={handleChange}
+              placeholder="Enter survey number"
               required
             />
           </div>
