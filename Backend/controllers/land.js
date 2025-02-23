@@ -1,4 +1,4 @@
-const Land = require('../models/landModel');
+const Land = require('../models/land');
 
 const getAllLands = async (req, res) => {
   try {
@@ -20,7 +20,6 @@ const getLandById = async (req, res) => {
 };
 
 const createLand = async (req, res) => {
-<<<<<<< HEAD
   try {
     const newLand = new Land(req.body);
     await newLand.save();
@@ -28,36 +27,6 @@ const createLand = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to add land" });
   }
-=======
-
-    const body = req.body;
-    console.log(body);
-
-    if (!body || !body.ownerName || !body.landArea || !body.district || !body.taluk || !body.village || !body.blockNumber || !body.surveyNumber) {
-        return res.status(400).json({ error: "All fields are required" });
-    }
-
-    try {
-        const result = await Land.create({
-            ownerName: body.ownerName,
-            landArea: body.landArea,
-            district: body.district,
-            taluk: body.taluk,
-            village: body.village,
-            blockNumber: body.blockNumber,
-            surveyNumber: body.surveyNumber
-        });
-
-        console.log("Land entry created:", result);
-        return res.status(201).json({ msg: "Success", land: result });
-    } catch (error) {
-        console.error("Error creating land entry:", error);
-        return res.status(500).json({ error: "Internal Server Error" });
-
-    }
-    
-    
->>>>>>> refs/remotes/origin/main
 };
 
 const updateLandById = async (req, res) => {

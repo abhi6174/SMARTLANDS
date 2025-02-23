@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllLands, getLandById, createLand, updateLandById, deleteLandById } = require('../controllers/landController');
+const { getAllLands, getLandById, createLand, updateLandById, deleteLandById } = require("../controllers/land");
 
 router.route("/")
   .get(getAllLands)
