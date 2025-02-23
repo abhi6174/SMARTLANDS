@@ -1,13 +1,14 @@
-const express=require('express');
-const router=express.Router();
-const Land =require("../models/land")
-const { getAllLands, getLandById, createLand, updateLandById, deleteLandById }=require("../controllers/land")
+const express = require('express');
+const router = express.Router();
+const { getAllLands, getLandById, createLand, updateLandById, deleteLandById } = require('../controllers/landController');
 
 router.route("/")
-    .get(getAllLands)
-    .post(createLand)
+  .get(getAllLands)
+  .post(createLand);
 
+router.route("/:id")
+  .get(getLandById)
+  .put(updateLandById)
+  .delete(deleteLandById);
 
-
-
-module.exports=router
+module.exports = router;

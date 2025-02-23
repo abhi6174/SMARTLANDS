@@ -1,49 +1,37 @@
 const mongoose = require('mongoose');
 
-
 // Define schema & model
-const landSchema= new mongoose.Schema({
+const landSchema = new mongoose.Schema({
   ownerName: {
-
-    type:String,
-    required:true,
+    type: String,
+    required: true,
   },
   landArea: {
-
-    type:Number,
-    required:true,
+    type: Number,
+    required: true,
   },
-
   district: {
-
-    type:String,
-    required:true,
+    type: String,
+    required: true,
   },
   taluk: {
-    type:String,
-    required:true,
+    type: String,
+    required: true,
   },
-  village:{
+  village: {
+    type: String,
+    required: true,
+  },
+  blockNumber: {
+    type: Number,
+    required: true,
+  },
+  surveyNumber: {
+    type: Number,
+    required: true,
+  }
+});
 
-    type:String,
-    required:true,
-  } ,
-  blockNumber:{
+const Land = mongoose.model("Land", landSchema);
 
-    type:Number,
-    required:true,
-  } ,
-   surveyNumber:{
-
-    type:Number,
-    required:true,
-  } 
-
-})
-const Land=mongoose.model("land",landSchema);
-
-module.exports= Land;
-
-
-  
-
+module.exports = Land;  // Export the model properly
