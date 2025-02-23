@@ -18,7 +18,7 @@ const landSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  village: {
+  village: {gi
     type: String,
     required: true,
   },

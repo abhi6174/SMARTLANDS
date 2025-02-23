@@ -1,4 +1,3 @@
-// src/hooks/useBlockchain.js
 import { useState, useEffect } from 'react';
 
 export default function useBlockchain() {

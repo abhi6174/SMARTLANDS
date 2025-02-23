@@ -1,7 +1,8 @@
+// src/pages/LoginPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/LoginPage.css";
-import mockUsers from "../data/mockUsers"; // Import mock wallet addresses
+import mockUsers from "../data/mockUsers.js";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -14,7 +15,6 @@ const LoginPage = () => {
     checkIfWalletIsConnected();
   }, []);
 
-  // Check if the wallet is already connected
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
@@ -32,8 +32,12 @@ const LoginPage = () => {
           navigate("/user");
         } else {
           localStorage.removeItem("connectedAccount");
-          setError("Unauthorized wallet! Access denied.");
+          setAccount(null);
+          setError("Unauthorized wallet detected. Please connect an authorized account.");
         }
+      } else {
+        localStorage.removeItem("connectedAccount");
+        setAccount(null);
       }
     } catch (error) {
       setError("Error checking MetaMask connection");
@@ -41,17 +45,17 @@ const LoginPage = () => {
     }
   };
 
-  // Check if the wallet is in mock data
   const isAuthorized = (walletAddress) => {
     return mockUsers.some(user => user.wallet.toLowerCase() === walletAddress.toLowerCase());
   };
 
-  // Connect MetaMask and verify wallet
   const connectWallet = async (e) => {
     e.preventDefault();
     try {
       setIsLoading(true);
       setError("");
+      setAccount(null);
+      localStorage.removeItem("connectedAccount");
 
       const { ethereum } = window;
       if (!ethereum) {
@@ -69,17 +73,25 @@ const LoginPage = () => {
           localStorage.setItem("connectedAccount", walletAddress);
           setTimeout(() => navigate("/user"), 500);
         } else {
-          setError("Unauthorized wallet! Access denied.");
+          localStorage.removeItem("connectedAccount");
+          setAccount(null);
+          setError("Unauthorized wallet! Access denied. Please try another account.");
         }
       } else {
         setError("No accounts found. Please try again.");
       }
     } catch (error) {
-      console.error(error);
-      setError("Error connecting to MetaMask");
+      console.error("Connection error:", error);
+      setError("Error connecting to MetaMask. Please try again.");
+      localStorage.removeItem("connectedAccount");
+      setAccount(null);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSignUp = () => {
+    navigate("/register"); // Already navigates to /register
   };
 
   const renderContent = () => {
@@ -117,15 +129,28 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
-      <header className="page-header">
-        <h1>SmartLand</h1>
-      </header>
-      <div className="navbar">
-        <button onClick={() => setActiveTab("login")} className={activeTab === "login" ? "active" : ""}>
+      <nav className="navbar">
+        <button 
+          onClick={() => setActiveTab("login")} 
+          className={activeTab === "login" ? "active" : ""}
+        >
           Login
         </button>
+      </nav>
+      <div className="login-container">
+        <header className="page-header">
+          <h1>SmartLand</h1>
+        </header>
+        <main className="content-container">
+          {renderContent()}
+        </main>
       </div>
-      <div className="content-container">{renderContent()}</div>
+      <button 
+        className="signup-button" 
+        onClick={handleSignUp}
+      >
+        Sign Up
+      </button>
     </div>
   );
 };
