@@ -21,7 +21,7 @@ const getLandById = async (req, res) => {
 
 const createLand = async (req, res) => {
   const { ownerName,walletAddress, status,landArea, district, taluk, village, blockNumber, surveyNumber } = req.body;
-
+console.log("here",req.body)
   // Input validation
   if (!ownerName ||!walletAddress ||!status|| !landArea || !district || !taluk || !village || !blockNumber || !surveyNumber) {
     return res.status(400).json({ error: "All fields are required" });

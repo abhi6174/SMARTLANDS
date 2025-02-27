@@ -3,7 +3,7 @@ import React from 'react';
 import useBlockchain from '../hooks/useBlockchain';
 
 const MyProfile = () => {
-  const { account, accountBalance } = useBlockchain();
+  const { account, accountBalance,currentUser } = useBlockchain();
 
   return (
     <div className="profile-content">
@@ -13,6 +13,9 @@ const MyProfile = () => {
         <div className="profile-card">
           <h3>Account Information</h3>
           <div className="profile-info">
+            <p><strong>Name:</strong> 
+              <span className="name">{currentUser.name}</span>
+            </p>
             <p><strong>Wallet Address:</strong> 
               <span className="address">{account}</span>
             </p>

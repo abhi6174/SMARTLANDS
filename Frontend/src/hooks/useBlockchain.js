@@ -6,6 +6,7 @@ export default function useBlockchain() {
   const [account, setAccount] = useState(null);
   const [accountBalance, setAccountBalance] = useState(null);
   const [userLands, setUserLands] = useState([]);
+  const [currentUser, setcurrentUser] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -29,9 +30,14 @@ export default function useBlockchain() {
         });
         setAccountBalance(parseInt(balance, 16) / Math.pow(10, 18));
       }
+      let response= await axios.get("http://localhost:8001/api/users");
+      let allUsers=response.data;
+      let user= allUsers.find(user => user.walletAddress.toLowerCase() === address.toLowerCase());
+      setcurrentUser(user||null);
     } catch (error) {
       console.error('Error fetching account details:', error);
     }
+    
   };
 
   const fetchUserLands = async (address) => {
@@ -72,6 +78,7 @@ export default function useBlockchain() {
     accountBalance,
     userLands,
     isLoading,
+    currentUser,
     fetchUserLands,
     handleLogout,
     setUserLands

@@ -19,7 +19,6 @@ app.use(cors({
   }));
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
-app.use(logReqRes("log.txt"))
 //routes
 app.use("/api/users",userRouter)
 app.use("/api/lands",landRouter)

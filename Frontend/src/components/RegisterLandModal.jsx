@@ -1,9 +1,11 @@
 // src/components/RegisterLandModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/RegisterLandModal.css";
+import useBlockchain from "../hooks/useBlockchain";
 import axios from 'axios';
 
 const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
+  const { currentUser } = useBlockchain();
   const [formData, setFormData] = useState({
     ownerName: "",
     landArea: "",
@@ -16,6 +18,16 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Sync ownerName with currentUser.name when currentUser is available
+  useEffect(() => {
+    if (currentUser && currentUser.name) {
+      setFormData(prev => ({
+        ...prev,
+        ownerName: currentUser.name,
+      }));
+    }
+  }, [currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,14 +54,13 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
       surveyNumber: formData.surveyNumber,
       registrationDate: new Date().toISOString().split('T')[0],
       status: "not verified",
-      owner: account,
+      walletAddress: account,
     };
 
     console.log("Form Data Submitted:", { ...newLand, walletAddress: account });
-    console.log("Backend URL from .env:", process.env.REACT_APP_BACKEND_URL);
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/lands`, newLand, {
+      const response = await axios.post("http://localhost:8001/api/lands", newLand, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -87,8 +98,9 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
               name="ownerName"
               value={formData.ownerName}
               onChange={handleChange}
-              placeholder="Owner name"
+              placeholder="Loading name..."
               required
+              readOnly // Make uneditable
             />
           </div>
 
