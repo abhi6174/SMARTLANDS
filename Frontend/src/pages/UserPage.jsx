@@ -11,7 +11,7 @@ import useBlockchain from '../hooks/useBlockchain';
 const UserPage = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { account } = useBlockchain(); // Get account from useBlockchain
+  const { account, fetchUserLands } = useBlockchain(); // Add fetchUserLands
 
   return (
     <div className="app-container">
@@ -53,7 +53,8 @@ const UserPage = () => {
       <RegisterLandModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        account={account} // Pass account to modal
+        account={account}
+        fetchUserLands={fetchUserLands} // Pass fetchUserLands
       />
     </div>
   );

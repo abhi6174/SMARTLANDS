@@ -20,11 +20,46 @@ const getLandById = async (req, res) => {
 };
 
 const createLand = async (req, res) => {
+  const { ownerName,walletAddress, status,landArea, district, taluk, village, blockNumber, surveyNumber } = req.body;
+
+  // Input validation
+  if (!ownerName ||!walletAddress ||!status|| !landArea || !district || !taluk || !village || !blockNumber || !surveyNumber) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  // Data sanitization (optional)
+  const sanitizedData = {
+    ownerName: ownerName.trim(),
+    walletAddress:walletAddress.trim(),
+    landArea: parseFloat(landArea),
+    district: district.trim(),
+    taluk: taluk.trim(),
+    village: village.trim(),
+    blockNumber: parseInt(blockNumber),
+    surveyNumber: parseInt(surveyNumber),
+    status:status
+  };
   try {
-    const newLand = new Land(req.body);
+    console.log("adding",sanitizedData)
+    // Create and save the new land record
+    const newLand = new Land(sanitizedData);
     await newLand.save();
-    res.status(201).json({ message: "Land added successfully", newLand });
+
+    // Log success
+    console.log("Land added successfully:", newLand);
+
+    // Return success response
+    res.status(201).json({ message: "Land added successfully", land: newLand });
   } catch (error) {
+    // Log the error
+    console.error("Error adding land:", error);
+
+    // Handle validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ error: error.message });
+    }
+
+    // Handle other errors
     res.status(500).json({ error: "Failed to add land" });
   }
 };
@@ -49,4 +84,4 @@ const deleteLandById = async (req, res) => {
   }
 };
 
-module.exports = { getAllLands, getLandById, createLand, updateLandById, deleteLandById }; // Export controllers correctly
+module.exports = { getAllLands, getLandById,createLand, updateLandById, deleteLandById }; // Export controllers correctly

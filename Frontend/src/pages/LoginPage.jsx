@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/LoginPage.css";
-import mockUsers from "../data/mockUsers.js";
+import axios from "axios";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -28,9 +28,11 @@ const LoginPage = () => {
 
       if (accounts.length > 0 && storedAccount === accounts[0]) {
         if (isAuthorized(accounts[0])) {
+          console.log("authorized")
           setAccount(accounts[0]);
           navigate("/user");
         } else {
+          console.log("not auth")
           localStorage.removeItem("connectedAccount");
           setAccount(null);
           setError("Unauthorized wallet detected. Please connect an authorized account.");
@@ -45,8 +47,14 @@ const LoginPage = () => {
     }
   };
 
-  const isAuthorized = (walletAddress) => {
-    return mockUsers.some(user => user.wallet.toLowerCase() === walletAddress.toLowerCase());
+  const isAuthorized = async(walletAddress) => {
+    try{
+      let response= await axios.get("http://localhost:8001/api/users");
+      let allUsers=response.data;
+      return allUsers.some(user => user.walletAddress.toLowerCase() === walletAddress.toLowerCase());
+    }catch(error){
+      console.error("some error occured",error)
+    }
   };
 
   const connectWallet = async (e) => {
@@ -68,7 +76,7 @@ const LoginPage = () => {
       if (accounts.length > 0) {
         const walletAddress = accounts[0];
 
-        if (isAuthorized(walletAddress)) {
+        if (await isAuthorized(walletAddress)) {
           setAccount(walletAddress);
           localStorage.setItem("connectedAccount", walletAddress);
           setTimeout(() => navigate("/user"), 500);

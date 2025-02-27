@@ -1,7 +1,7 @@
 // src/components/MyProfile.jsx
 import React from 'react';
 import useBlockchain from '../hooks/useBlockchain';
-import mockUsers from '../data/mockUsers'
+
 const MyProfile = () => {
   const { account, accountBalance } = useBlockchain();
 

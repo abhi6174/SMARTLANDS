@@ -1,4 +1,6 @@
+// src/hooks/useBlockchain.js
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function useBlockchain() {
   const [account, setAccount] = useState(null);
@@ -35,17 +37,13 @@ export default function useBlockchain() {
   const fetchUserLands = async (address) => {
     setIsLoading(true);
     try {
-      const allLands = [
-        // ... existing dummy data ...
-      ];
-      const newRegistrations = JSON.parse(localStorage.getItem('newLandRegistrations') || '[]');
-      const combinedLands = [...allLands, ...newRegistrations];
-      const filteredLands = combinedLands.filter(land => 
-        land.owner.toLowerCase() === address.toLowerCase()
-      );
-      setUserLands(filteredLands);
+      const response = await axios.get("http://localhost:8001/api/lands", {
+        params: { owner: address } // Filter by owner
+      });
+      setUserLands(response.data);
     } catch (error) {
       console.error('Error fetching user lands:', error);
+      setUserLands([]);
     } finally {
       setIsLoading(false);
     }

@@ -33,10 +33,10 @@ const Dashboard = () => {
       {userLands.length > 0 ? (
         <div className="recent-lands">
           {userLands.slice(0, 3).map(land => (
-            <div key={land.id} className="recent-land-item">
+            <div key={land._id} className="recent-land-item"> {/* Use _id */}
               <div>
-                <h4>Property </h4>
-                <p>{land.location}</p>
+                <h4>Property #{land._id}</h4>
+                <p>{land.village}, {land.taluk}, {land.district}</p>
               </div>
               <span className={`status-${land.status.toLowerCase()}`}>
                 {land.status}

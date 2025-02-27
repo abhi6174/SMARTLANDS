@@ -1,10 +1,9 @@
 // src/components/RegisterLandModal.jsx
 import React, { useState } from "react";
 import "../styles/RegisterLandModal.css";
-import { useLandContext } from '../context/LandContext';
+import axios from 'axios';
 
-const RegisterLandModal = ({ isOpen, onClose, account }) => {
-  const { addLand } = useLandContext();
+const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
   const [formData, setFormData] = useState({
     ownerName: "",
     landArea: "",
@@ -12,8 +11,8 @@ const RegisterLandModal = ({ isOpen, onClose, account }) => {
     district: "",
     taluk: "",
     village: "",
-    blockNo: "",
-    surveyNo: "",
+    blockNumber: "",
+    surveyNumber: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -36,26 +35,32 @@ const RegisterLandModal = ({ isOpen, onClose, account }) => {
     const newLand = {
       ownerName: formData.ownerName,
       landArea: formData.landArea,
-      landUnit: formData.landUnit,
       district: formData.district,
       taluk: formData.taluk,
       village: formData.village,
-      blockNo: formData.blockNo,
-      surveyNo: formData.surveyNo,
+      blockNumber: formData.blockNumber,
+      surveyNumber: formData.surveyNumber,
       registrationDate: new Date().toISOString().split('T')[0],
-      status: "Registered",
-      id: Date.now(),
+      status: "not verified",
+      owner: account,
     };
 
     console.log("Form Data Submitted:", { ...newLand, walletAddress: account });
+    console.log("Backend URL from .env:", process.env.REACT_APP_BACKEND_URL);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      addLand(newLand); // Use context to add land
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/lands`, newLand, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Land registered successfully:', response.data);
+      await fetchUserLands(account);
       onClose();
     } catch (error) {
       console.error("Error registering land:", error);
-      setError("Failed to register land. Please try again.");
+      setError(error.response?.data?.error || "Failed to register land. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -153,8 +158,8 @@ const RegisterLandModal = ({ isOpen, onClose, account }) => {
             <input
               type="text"
               id="blockNo"
-              name="blockNo"
-              value={formData.blockNo}
+              name="blockNumber"
+              value={formData.blockNumber}
               onChange={handleChange}
               placeholder="Enter block number"
               required
@@ -166,8 +171,8 @@ const RegisterLandModal = ({ isOpen, onClose, account }) => {
             <input
               type="text"
               id="surveyNo"
-              name="surveyNo"
-              value={formData.surveyNo}
+              name="surveyNumber"
+              value={formData.surveyNumber}
               onChange={handleChange}
               placeholder="Enter survey number"
               required
