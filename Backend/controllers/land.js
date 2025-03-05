@@ -1,4 +1,7 @@
+// backend/controllers/land.js
 const Land = require('../models/land');
+const { landRegistry } = require('../index');
+const ethers = require('ethers');
 
 const getAllLands = async (req, res) => {
   try {
@@ -20,46 +23,49 @@ const getLandById = async (req, res) => {
 };
 
 const createLand = async (req, res) => {
-  const { ownerName,walletAddress, status,landArea, district, taluk, village, blockNumber, surveyNumber } = req.body;
-console.log("here",req.body)
-  // Input validation
-  if (!ownerName ||!walletAddress ||!status|| !landArea || !district || !taluk || !village || !blockNumber || !surveyNumber) {
+  const { ownerName, landArea, district, taluk, village, blockNumber, surveyNumber, walletAddress } = req.body;
+
+  if (!ownerName || !landArea || !district || !taluk || !village || !blockNumber || !surveyNumber || !walletAddress) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
-  // Data sanitization (optional)
   const sanitizedData = {
     ownerName: ownerName.trim(),
-    walletAddress:walletAddress.trim(),
     landArea: parseFloat(landArea),
     district: district.trim(),
     taluk: taluk.trim(),
     village: village.trim(),
     blockNumber: parseInt(blockNumber),
     surveyNumber: parseInt(surveyNumber),
-    status:status
+    walletAddress: walletAddress,
   };
+
   try {
-    console.log("adding",sanitizedData)
-    // Create and save the new land record
     const newLand = new Land(sanitizedData);
     await newLand.save();
 
-    // Log success
-    console.log("Land added successfully:", newLand);
+    // Register on blockchain
+    const tx = await landRegistry.registerLand(
+      ownerName,
+      parseFloat(landArea),
+      district,
+      taluk,
+      village,
+      parseInt(blockNumber),
+      parseInt(surveyNumber)
+    );
+    await tx.wait();
 
-    // Return success response
+    console.log("Land added successfully:", newLand);
     res.status(201).json({ message: "Land added successfully", land: newLand });
   } catch (error) {
-    // Log the error
     console.error("Error adding land:", error);
-
-    // Handle validation errors
+    if (error.code === 11000) {
+      return res.status(400).json({ error: "Survey number already exists" });
+    }
     if (error.name === "ValidationError") {
       return res.status(400).json({ error: error.message });
     }
-
-    // Handle other errors
     res.status(500).json({ error: "Failed to add land" });
   }
 };
@@ -84,4 +90,44 @@ const deleteLandById = async (req, res) => {
   }
 };
 
-module.exports = { getAllLands, getLandById,createLand, updateLandById, deleteLandById }; // Export controllers correctly
+const transferLandOwnership = async (req, res) => {
+  const { landId, newOwnerAddress } = req.body;
+  try {
+    const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
+    const tx = await landRegistry.transferOwnership(landIdHash, newOwnerAddress, {
+      value: ethers.parseEther("0.001") // 0.001 Ether
+    });
+    await tx.wait();
+    res.status(200).json({ message: "Ownership transferred successfully", txHash: tx.hash });
+  } catch (error) {
+    console.error("Error transferring ownership:", error);
+    res.status(500).json({ error: "Failed to transfer ownership" });
+  }
+};
+
+const getLandHistory = async (req, res) => {
+  const { landId } = req.params;
+  try {
+    const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
+    const logs = await provider.getLogs({
+      fromBlock: 0,
+      toBlock: 'latest',
+      address: landRegistryAddress,
+      topics: [
+        ethers.id("OwnershipTransferred(bytes32,address,address)"),
+        landIdHash
+      ]
+    });
+    const transfers = logs.map(log => ({
+      txHash: log.transactionHash,
+      blockNumber: log.blockNumber,
+      from: ethers.getAddress('0x' + log.topics[2].slice(-40)),
+      to: ethers.getAddress('0x' + log.topics[3].slice(-40))
+    }));
+    res.status(200).json(transfers);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch land history" });
+  }
+};
+
+module.exports = { getAllLands, getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory };
