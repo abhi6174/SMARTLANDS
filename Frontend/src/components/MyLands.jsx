@@ -18,7 +18,7 @@ const MyLands = () => {
         ) : userLands.length > 0 ? (
           <div className="lands-grid">
             {userLands.map(land => (
-              <LandCard key={land._id} land={land} /> 
+              <LandCard key={land.landId} land={land} /> 
             ))}
           </div>
         ) : (

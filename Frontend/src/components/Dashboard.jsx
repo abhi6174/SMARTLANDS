@@ -8,6 +8,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-content">
+      
       <AccountDetails />
       
       <div className="dashboard-stats">
@@ -33,9 +34,9 @@ const Dashboard = () => {
       {userLands.length > 0 ? (
         <div className="recent-lands">
           {userLands.slice(0, 3).map(land => (
-            <div key={land._id} className="recent-land-item"> {/* Use _id */}
+            <div key={land.landId} className="recent-land-item"> {/* Use _id */}
               <div>
-                <h4>Property #{land._id}</h4>
+                <h4>Property #{land.landId}</h4>
                 <p>{land.village}, {land.taluk}, {land.district}</p>
               </div>
               <span className={`status-${land.status.toLowerCase()}`}>

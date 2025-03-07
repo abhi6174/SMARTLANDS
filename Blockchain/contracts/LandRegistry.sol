@@ -22,6 +22,7 @@ contract LandRegistry is Ownable {
 
     event LandRegistered(bytes32 indexed landId, address indexed owner, string ownerName);
     event OwnershipTransferred(bytes32 indexed landId, address indexed from, address indexed to);
+    event Debug(bytes32 landId); // Add this event for debugging
 
     constructor() Ownable(msg.sender) {}
 
@@ -51,18 +52,19 @@ contract LandRegistry is Ownable {
         landExists[landId] = true;
 
         emit LandRegistered(landId, msg.sender, _ownerName);
+        emit Debug(landId); // Log the landId for debugging
     }
 
-    function transferOwnership(bytes32 _landId, address _newOwner) external payable {
+      function transferOwnership(bytes32 _landId, address _newOwner) external payable {
         require(lands[_landId].exists, "Land does not exist");
         require(msg.sender == lands[_landId].ownerAddress, "Only the owner can transfer");
-        require(msg.value == 0.001 ether, "Must pay exactly 1 Ether");
+        require(msg.value == 0.01 ether, "Must pay exactly 0.01 MATIC"); // Changed to 0.1 MATIC (0.1 ether units)
 
         address previousOwner = lands[_landId].ownerAddress;
         lands[_landId].ownerAddress = _newOwner;
 
-        (bool sent, ) = previousOwner.call{value: 1 ether}("");
-        require(sent, "Failed to send Ether");
+        (bool sent, ) = previousOwner.call{value: 0.01 ether}("");
+        require(sent, "Failed to send MATIC");
 
         emit OwnershipTransferred(_landId, previousOwner, _newOwner);
     }

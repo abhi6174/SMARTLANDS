@@ -9,7 +9,7 @@ const LandCard = ({ land }) => {
 
   return (
     <div className="land-card">
-      <h3>Property #{land._id}</h3> {/* Use _id */}
+      <h3>Property #{land.landId}</h3> {/* Use _id */}
       <div className="land-details">
         <p><strong>Owner:</strong> {land.ownerName}</p>
         <p><strong>Area:</strong> {land.landArea} {land.landUnit || 'SqFt'}</p>

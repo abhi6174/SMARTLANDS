@@ -1,16 +1,63 @@
 // backend/controllers/land.js
 const Land = require('../models/land');
-const { landRegistry } = require('../index');
 const ethers = require('ethers');
+const { landRegistry } = require('../config/contract'); // Import the contract instance
 
+// ABI for the LandRegistered event
+const landRegisteredAbi = [
+  "event LandRegistered(bytes32 indexed landId, address indexed owner, string ownerName)"
+];
+
+// Create an interface for decoding
+const iface = new ethers.Interface(landRegisteredAbi);
+
+// Function to decode a single log
+const decodeLandRegisteredEvent = (log) => {
+  const decodedLog = iface.parseLog(log);
+  return {
+    landId: decodedLog.args.landId,
+    owner: decodedLog.args.owner,
+    ownerName: decodedLog.args.ownerName,
+  };
+};
+
+// Function to get all registered lands
 const getAllLands = async (req, res) => {
   try {
-    const lands = await Land.find();
+    // Get all LandRegistered events
+    const filter = landRegistry.filters.LandRegistered();
+    const events = await landRegistry.queryFilter(filter);
+
+    const lands = [];
+
+    for (const event of events) {
+      // Decode the event log
+      const decodedEvent = decodeLandRegisteredEvent(event);
+
+      // Get additional details from the contract
+      const landDetails = await landRegistry.lands(decodedEvent.landId);
+
+      lands.push({
+        landId: decodedEvent.landId.toString(),
+        ownerName: decodedEvent.ownerName,
+        landArea: landDetails.landArea.toString(),
+        district: landDetails.district,
+        taluk: landDetails.taluk,
+        village: landDetails.village,
+        blockNumber: landDetails.blockNumber.toString(),
+        surveyNumber: landDetails.surveyNumber.toString(),
+        ownerAddress: decodedEvent.owner,
+        status:"Verified"
+      });
+    }
+
     res.status(200).json(lands);
   } catch (error) {
+    console.error("Error fetching lands:", error);
     res.status(500).json({ error: "Failed to fetch lands" });
   }
 };
+
 
 const getLandById = async (req, res) => {
   try {
@@ -21,7 +68,6 @@ const getLandById = async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve land" });
   }
 };
-
 const createLand = async (req, res) => {
   const { ownerName, landArea, district, taluk, village, blockNumber, surveyNumber, walletAddress } = req.body;
 
@@ -42,20 +88,46 @@ const createLand = async (req, res) => {
 
   try {
     const newLand = new Land(sanitizedData);
-    await newLand.save();
+    
 
-    // Register on blockchain
-    const tx = await landRegistry.registerLand(
-      ownerName,
-      parseFloat(landArea),
-      district,
-      taluk,
-      village,
-      parseInt(blockNumber),
-      parseInt(surveyNumber)
+    // Log the input data
+    console.log("Registering land with data:", sanitizedData);
+
+    // Calculate the landId (for debugging)
+    const landId = ethers.solidityPackedKeccak256(
+      ["uint256", "string", "string", "string", "uint256", "uint256"],
+      [landArea, district, taluk, village, blockNumber, surveyNumber]
     );
-    await tx.wait();
+    console.log("Calculated landId:", landId);
 
+    // Register the land on the blockchain
+    const tx = await landRegistry.registerLand(
+      sanitizedData.ownerName,
+      sanitizedData.landArea,
+      sanitizedData.district,
+      sanitizedData.taluk,
+      sanitizedData.village,
+      sanitizedData.blockNumber,
+      sanitizedData.surveyNumber
+    );
+
+    // Wait for the transaction to be mined
+    const receipt = await tx.wait();
+
+    // Log the Debug event
+    const debugEvent = receipt.logs.find((log) => log.topics[0] === ethers.id("Debug(bytes32)"));
+    if (debugEvent) {
+      const loggedLandId = ethers.hexlify(debugEvent.data);
+      console.log("Logged landId from contract:", loggedLandId);
+    
+      // Compare the loggedLandId with the calculated landId
+      if (loggedLandId === landId) {
+        console.log("Both IDs are the same");
+      } else {
+        console.log("IDs do not match");
+      }
+    }
+    await newLand.save();
     console.log("Land added successfully:", newLand);
     res.status(201).json({ message: "Land added successfully", land: newLand });
   } catch (error) {
@@ -95,7 +167,7 @@ const transferLandOwnership = async (req, res) => {
   try {
     const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
     const tx = await landRegistry.transferOwnership(landIdHash, newOwnerAddress, {
-      value: ethers.parseEther("0.001") // 0.001 Ether
+      value: ethers.parseEther("0.01") // Changed to 0.01 MATIC (0.01 ether units)
     });
     await tx.wait();
     res.status(200).json({ message: "Ownership transferred successfully", txHash: tx.hash });
