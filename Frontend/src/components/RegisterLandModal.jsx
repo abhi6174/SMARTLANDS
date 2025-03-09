@@ -3,7 +3,10 @@ import React, { useState, useEffect } from "react";
 import "../styles/RegisterLandModal.css";
 import useBlockchain from "../hooks/useBlockchain";
 import axios from 'axios';
+import {ethers} from 'ethers';
+import LandRegistryABI from '../contracts/LandRegistryABI';
 
+const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
   const { currentUser } = useBlockchain();
   const [formData, setFormData] = useState({
@@ -37,45 +40,79 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
       [name]: value,
     });
   };
+// File: src/components/RegisterLandModal.jsx
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("Form submission triggered");
-    setIsSubmitting(true);
-    setError(null);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log("Form submission triggered");
+  setIsSubmitting(true);
+  setError(null);
 
-    const newLand = {
-      ownerName: formData.ownerName,
-      landArea: formData.landArea,
-      district: formData.district,
-      taluk: formData.taluk,
-      village: formData.village,
-      blockNumber: formData.blockNumber,
-      surveyNumber: formData.surveyNumber,
-      registrationDate: new Date().toISOString().split('T')[0],
-      status: "not verified",
-      walletAddress: account,
-    };
-
-    console.log("Form Data Submitted:", { ...newLand, walletAddress: account });
-
-    try {
-      const response = await axios.post("http://localhost:8001/api/lands", newLand, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('Land registered successfully:', response.data);
-      await fetchUserLands(account);
-      onClose();
-    } catch (error) {
-      console.error("Error registering land:", error);
-      setError(error.response?.data?.error || "Failed to register land. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const newLand = {
+    ownerName: formData.ownerName,
+    landArea: formData.landArea,
+    district: formData.district,
+    taluk: formData.taluk,
+    village: formData.village,
+    blockNumber: formData.blockNumber,
+    surveyNumber: formData.surveyNumber,
+    registrationDate: new Date().toISOString().split('T')[0],
+    status: "not verified",
+    walletAddress: account, // Use the connected wallet address
   };
+
+  console.log("Form Data Submitted:", newLand);
+
+  try {
+    const { ethereum } = window;
+
+    if (!ethereum) {
+      throw new Error("MetaMask is not installed!");
+    }
+  
+    // Connect to the smart contract
+    const provider = new ethers.BrowserProvider(ethereum);
+    const signer = await provider.getSigner();
+    const landRegistry = new ethers.Contract(
+      contractAddress, // Use environment variable for contract address
+      LandRegistryABI, // Ensure the ABI is imported
+      signer
+    );
+
+    // Call the registerLand function
+    const tx = await landRegistry.registerLand(
+      newLand.ownerName,
+      newLand.landArea,
+      newLand.district,
+      newLand.taluk,
+      newLand.village,
+      newLand.blockNumber,
+      newLand.surveyNumber,
+      { gasLimit: 500000 }
+    );
+
+    // Wait for the transaction to be mined
+    await tx.wait();
+
+    console.log("Land registered successfully on the blockchain!");
+
+    // Save land details to the backend database
+    const response = await axios.post("http://localhost:8001/api/lands", newLand, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Land saved to database:', response.data);
+    await fetchUserLands(account); // Refresh the user's lands
+    onClose();
+  } catch (error) {
+    console.error("Error registering land:", error);
+    setError(error.message || "Failed to register land. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   if (!isOpen) return null;
 

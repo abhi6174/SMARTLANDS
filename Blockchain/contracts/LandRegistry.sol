@@ -34,7 +34,7 @@ contract LandRegistry is Ownable {
         string memory _village,
         uint256 _blockNumber,
         uint256 _surveyNumber
-    ) external onlyOwner {
+    ) external {
         bytes32 landId = keccak256(abi.encodePacked(_landArea, _district, _taluk, _village, _blockNumber, _surveyNumber));
         require(!landExists[landId], "Land already registered");
 

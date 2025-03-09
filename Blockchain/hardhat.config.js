@@ -5,7 +5,7 @@ require('dotenv').config()
 module.exports = {
   solidity: "0.8.28",
   networks:{
-    sepolia:{
+    amoy:{
       url:process.env.ALCHEMYURL,
       accounts:[process.env.USER1KEY],
       chainId: 80002

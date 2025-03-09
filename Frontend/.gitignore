@@ -10,5 +10,5 @@ build/
 .env.local
 
 # Ignore specific files in src
-src/aggregated_frontend_output.txt
+src/src_aggregation.txt
 src/aggregateFrontend.js
