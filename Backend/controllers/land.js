@@ -21,8 +21,54 @@ const decodeLandRegisteredEvent = (log) => {
   };
 };
 
-// Function to get all registered lands
 // File: backend/controllers/land.js
+const getMarketplaceLands = async (req, res) => {
+  try {
+    const { owner } = req.query; // Get the owner's wallet address from query params
+
+    // Validate the owner query parameter
+    if (!owner) {
+      return res.status(400).json({ error: "Owner wallet address is required" });
+    }
+
+
+    // Get all LandRegistered events
+    const filter = landRegistry.filters.LandRegistered();
+    const events = await landRegistry.queryFilter(filter);
+
+    const marketplaceLands = [];
+
+    for (const event of events) {
+      // Decode the event log
+      const decodedEvent = decodeLandRegisteredEvent(event);
+
+      // Get additional details from the contract
+      const landDetails = await landRegistry.lands(decodedEvent.landId);
+
+      // Exclude lands owned by the current user
+      if (decodedEvent.owner.toLowerCase() !== owner.toLowerCase()) {
+        marketplaceLands.push({
+          landId: decodedEvent.landId.toString(),
+          ownerName: decodedEvent.ownerName,
+          landArea: landDetails.landArea.toString(),
+          district: landDetails.district,
+          taluk: landDetails.taluk,
+          village: landDetails.village,
+          blockNumber: landDetails.blockNumber.toString(),
+          surveyNumber: landDetails.surveyNumber.toString(),
+          ownerAddress: decodedEvent.owner,
+          status: "Verified",
+        });
+      }
+    }
+
+    res.status(200).json(marketplaceLands);
+  } catch (error) {
+    console.error("Error fetching marketplace lands:", error);
+    res.status(500).json({ error: "Failed to fetch marketplace lands" });
+  }
+};
+// Function to get all registered lands
 
 const getAllLands = async (req, res) => {
   try {
@@ -74,7 +120,7 @@ const getLandById = async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve land" });
   }
 };
-// File: backend/controllers/land.js
+// File: backend/controllers/land.js  
 
 const createLand = async (req, res) => {
   const { ownerName, landArea, district, taluk, village, blockNumber, surveyNumber, walletAddress } = req.body;
@@ -171,4 +217,4 @@ const getLandHistory = async (req, res) => {
   }
 };
 
-module.exports = { getAllLands, getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory };
+module.exports = { getAllLands,getMarketplaceLands ,getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory }; 

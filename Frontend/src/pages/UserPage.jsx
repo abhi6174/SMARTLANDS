@@ -7,6 +7,7 @@ import MyProfile from '../components/MyProfile';
 import RegisterLandModal from '../components/RegisterLandModal';
 import '../styles/UserPage.css';
 import useBlockchain from '../hooks/useBlockchain';
+import LandMarketplace from "../components/LandMarketplace";
 
 const UserPage = () => {
   const [activePage, setActivePage] = useState('dashboard');
@@ -35,12 +36,7 @@ const UserPage = () => {
           {activePage === 'dashboard' && <Dashboard />}
           {activePage === 'mylands' && <MyLands />}
           {activePage === 'profile' && <MyProfile />}
-          {activePage === 'marketplace' && (
-            <div className="placeholder-content">
-              <h3>Land Marketplace</h3>
-              <p>Coming soon! Browse available land listings.</p>
-            </div>
-          )}
+          {activePage === 'marketplace' && <LandMarketplace/>}
           {activePage === 'settings' && (
             <div className="placeholder-content">
               <h3>Account Settings</h3>
