@@ -5,7 +5,7 @@ SmartLands:Blockchain based land ownership and transfer system
 Our project is a blockchain-based land selling platform that enables secure, transparent, and decentralized transactions for land ownership. By utilizing blockchain technology and smart contracts, the platform ensures trust, eliminates intermediaries, and provides immutable land ownership records.
 
 
-
+Hello
 ## Features
 
 1) Ownership transfer
