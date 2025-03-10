@@ -12,13 +12,23 @@ const LandMarketplace = () => {
 
   useEffect(() => {
     const fetchMarketplaceLands = async () => {
+      if (!account) {
+        console.log("Account is not available.");
+        return;
+      }
+
       try {
+        console.log("Fetching marketplace lands for account:", account);
         const response = await fetch(
-          `http://localhost:8001/api/lands/marketplace?owner=${account}`
+          `http://localhost:8001/api/lands/marketplace?owner=${encodeURIComponent(account)}`
         );
-        console.log("fetching")
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch marketplace lands");
+        }
+
         const data = await response.json();
-        console.log(data);
+        console.log("Marketplace lands fetched:", data);
         setMarketplaceLands(data);
       } catch (error) {
         console.error("Error fetching marketplace lands:", error);
@@ -26,7 +36,7 @@ const LandMarketplace = () => {
         setIsLoading(false);
       }
     };
-    console.log(marketplaceLands)
+
     fetchMarketplaceLands();
   }, [account]);
 
