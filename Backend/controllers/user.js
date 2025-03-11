@@ -27,45 +27,44 @@ async function handleUpdateUserById(req, res) {
     return res.json({ status: "success", user: updatedUser });
 }
 
-async function handleCreateNewUser(req, res) {
+const handleCreateNewUser = async (req, res) => {
     const body = req.body;
     console.log(body);
-    
+  
     // Check all required fields including walletAddress
     if (!body || !body.name || !body.email || !body.walletAddress) {
-        return res.status(400).json({ 
-            error: "Name, email, and walletAddress are required" 
-        });
+      return res.status(400).json({ 
+        error: "Name, email, and walletAddress are required" 
+      });
     }
-
+  
     // Create user object with all required fields
     const userData = {
-        name: body.name,
-        email: body.email,
-        walletAddress: body.walletAddress
+      name: body.name,
+      email: body.email,
+      walletAddress: body.walletAddress
     };
-
+  
     try {
-        const result = await User.create(userData);
-        console.log("result", result);
-        return res.status(201).json({ 
-            msg: "success", 
-            id: result._id 
-        });
+      const result = await User.create(userData);
+      console.log("result", result);
+      return res.status(201).json({ 
+        msg: "success", 
+        id: result._id 
+      });
     } catch (error) {
-        if (error.code === 11000) { // Duplicate key error
-            return res.status(400).json({ 
-                error: "Email or wallet address already exists" 
-            });
-        }
-        return res.status(500).json({ 
-            error: "Server error",
-            details: error.message 
+      if (error.code === 11000) { // Duplicate key error
+        return res.status(400).json({ 
+          error: "Email or wallet address already exists" 
         });
+      }
+      return res.status(500).json({ 
+        error: "Server error",
+        details: error.message 
+      });
     }
-}
-
-module.exports = {
+  };
+  module.exports = {
     handleGetAllUsers,
     handleGetUserById,
     handleUpdateUserById,

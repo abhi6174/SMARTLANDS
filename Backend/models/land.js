@@ -1,7 +1,6 @@
 // backend/models/land.js
 const mongoose = require('mongoose');
-
-const landSchema = new mongoose.Schema({
+const  landSchema = new mongoose.Schema({
   ownerName: { type: String, required: true },
   landArea: { type: Number, required: true },
   district: { type: String, required: true },
@@ -14,6 +13,7 @@ const landSchema = new mongoose.Schema({
   status: { type: String, default: "not verified" }
 });
 
-const Land = mongoose.model("Land", landSchema);
 
+
+const Land = mongoose.model("Land", landSchema);
 module.exports = Land;
