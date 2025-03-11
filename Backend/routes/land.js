@@ -1,6 +1,20 @@
+// File: backend/routes/land.js
+
 const express = require('express');
 const router = express.Router();
-const { getAllLands, getLandById, createLand,getLandHistory,transferLandOwnership, updateLandById, deleteLandById, } = require("../controllers/land");
+const {
+  getAllLands,
+  getMarketplaceLands,
+  getLandById,
+  createLand,
+  getLandHistory,
+  transferLandOwnership,
+  updateLandById,
+  deleteLandById,
+} = require("../controllers/land");
+
+// Define the /marketplace route BEFORE the /:id route
+router.get("/marketplace", getMarketplaceLands);
 
 router.route("/")
   .get(getAllLands)
@@ -10,6 +24,8 @@ router.route("/:id")
   .get(getLandById)
   .put(updateLandById)
   .delete(deleteLandById);
+
 router.post("/transfer", transferLandOwnership);
 router.get("/history/:landId", getLandHistory);
+
 module.exports = router;

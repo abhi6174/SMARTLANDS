@@ -1,0 +1,29 @@
+/* File: src/styles/LandMarketplace.css */
+
+.land-marketplace {
+    padding: 20px;
+  }
+  
+  .land-marketplace h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .lands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .loading-indicator {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+  }
+  
+  .no-lands-message {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+  }
