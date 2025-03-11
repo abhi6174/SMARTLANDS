@@ -11,6 +11,7 @@ const {
   transferLandOwnership,
   updateLandById,
   deleteLandById,
+  acceptPurchaseRequest,
 } = require("../controllers/land");
 
 // Define the /marketplace route BEFORE the /:id route
@@ -27,5 +28,5 @@ router.route("/:id")
 
 router.post("/transfer", transferLandOwnership);
 router.get("/history/:landId", getLandHistory);
-
+router.post("/accept-purchase-request", acceptPurchaseRequest);
 module.exports = router;

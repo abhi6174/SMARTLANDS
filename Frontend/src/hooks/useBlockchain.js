@@ -30,7 +30,7 @@ export default function useBlockchain() {
         });
         setAccountBalance(parseInt(balance, 16) / Math.pow(10, 18));
       }
-      let response= await axios.get("http://localhost:8001/api/users");
+      let response= await axios.get("http://localhost:8002/api/users");
       let allUsers=response.data;
       let user= allUsers.find(user => user.walletAddress.toLowerCase() === address.toLowerCase());
       setcurrentUser(user||null);
@@ -43,7 +43,7 @@ export default function useBlockchain() {
   const fetchUserLands = async (address) => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:8001/api/lands", {
+      const response = await axios.get("http://localhost:8002/api/lands", {
         params: { owner: address } // Filter by owner
       });
       setUserLands(response.data);

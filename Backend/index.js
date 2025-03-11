@@ -5,7 +5,7 @@ const userRouter = require("./routes/user");
 const landRouter = require("./routes/land");
 const cors = require('cors');
 const app = express();
-const PORT = process.env.PORT || 8001;
+const PORT = process.env.PORT || 8002;
 const { connectMongodb } = require("./connection");
 const logReqRes = require("./middlewares");
 

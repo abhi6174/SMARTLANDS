@@ -1,15 +1,42 @@
-// src/components/LandCard.jsx
 import React from 'react';
 import '../styles/LandCard.css';
+import useBlockchain from '../hooks/useBlockchain';
 
-const LandCard = ({ land }) => {
+const LandCard = ({ land, isMarketplace }) => {
+  const { account } = useBlockchain();
+
   const viewLandDetails = (landId) => {
     alert(`Viewing details for property #${landId}`);
   };
 
+  const handlePurchase = async () => {
+    try {
+      const response = await fetch("http://localhost:8002/api/lands/purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          landId: land.landId,
+          buyerAddress: account,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to purchase land");
+      }
+
+      const data = await response.json();
+      alert(data.message); // Show success message
+    } catch (error) {
+      console.error("Error purchasing land:", error);
+      alert("Failed to purchase land. Please try again.");
+    }
+  };
+
   return (
     <div className="land-card">
-      <h3>Property #{land.landId}</h3> {/* Use _id */}
+      <h3>Property #{land.landId}</h3>
       <div className="land-details">
         <p><strong>Owner:</strong> {land.ownerName}</p>
         <p><strong>Area:</strong> {land.landArea} {land.landUnit || 'SqFt'}</p>
@@ -28,6 +55,16 @@ const LandCard = ({ land }) => {
       >
         View Complete Details
       </button>
+      
+      {/* Conditionally render the purchase button */}
+      {isMarketplace && (
+        <button 
+          className="purchase-button" 
+          onClick={handlePurchase}
+        >
+          Purchase Land
+        </button>
+      )}
     </div>
   );
 };
