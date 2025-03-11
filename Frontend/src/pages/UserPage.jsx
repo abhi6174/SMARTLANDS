@@ -1,10 +1,10 @@
-// src/pages/UserPage.jsx
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Dashboard from '../components/Dashboard';
 import MyLands from '../components/MyLands';
 import MyProfile from '../components/MyProfile';
 import RegisterLandModal from '../components/RegisterLandModal';
+import PurchaseRequests from '../components/PurchaseRequests';
 import '../styles/UserPage.css';
 import useBlockchain from '../hooks/useBlockchain';
 import LandMarketplace from "../components/LandMarketplace";
@@ -12,7 +12,7 @@ import LandMarketplace from "../components/LandMarketplace";
 const UserPage = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { account, fetchUserLands } = useBlockchain(); // Add fetchUserLands
+  const { account, fetchUserLands } = useBlockchain();
 
   return (
     <div className="app-container">
@@ -28,6 +28,7 @@ const UserPage = () => {
                activePage === 'mylands' ? 'My Properties' : 
                activePage === 'profile' ? 'My Profile' : 
                activePage === 'marketplace' ? 'Land Marketplace' : 
+               activePage === 'purchase-requests' ? 'Purchase Requests' : 
                'Account Settings'}</h2>
           <p className="blockchain-network">Network: Ethereum Testnet</p>
         </header>
@@ -36,7 +37,8 @@ const UserPage = () => {
           {activePage === 'dashboard' && <Dashboard />}
           {activePage === 'mylands' && <MyLands />}
           {activePage === 'profile' && <MyProfile />}
-          {activePage === 'marketplace' && <LandMarketplace/>}
+          {activePage === 'marketplace' && <LandMarketplace />}
+          {activePage === 'purchase-requests' && <PurchaseRequests />}
           {activePage === 'settings' && (
             <div className="placeholder-content">
               <h3>Account Settings</h3>
@@ -50,7 +52,7 @@ const UserPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         account={account}
-        fetchUserLands={fetchUserLands} // Pass fetchUserLands
+        fetchUserLands={fetchUserLands}
       />
     </div>
   );

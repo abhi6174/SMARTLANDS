@@ -1,4 +1,3 @@
-// src/components/MyLands.jsx
 import React from 'react';
 import SearchBar from './SearchBar';
 import LandCard from './LandCard';

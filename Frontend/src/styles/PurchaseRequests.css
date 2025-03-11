@@ -1,0 +1,37 @@
+.purchase-requests {
+    padding: 20px;
+  }
+  
+  .requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .request-item {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  .accept-button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .accept-button:hover {
+    background-color: #45a049;
+  }
+  
+  .no-requests-message {
+    text-align: center;
+    color: #888;
+  }

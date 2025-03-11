@@ -97,7 +97,7 @@ const handleSubmit = async (e) => {
     console.log("Land registered successfully on the blockchain!");
 
     // Save land details to the backend database
-    const response = await axios.post("http://localhost:8001/api/lands", newLand, {
+    const response = await axios.post("http://localhost:8002/api/lands", newLand, {
       headers: {
         'Content-Type': 'application/json',
       },

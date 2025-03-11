@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx
 import React from 'react';
 import useBlockchain from '../hooks/useBlockchain';
 
@@ -28,7 +27,7 @@ const Sidebar = ({ activePage, setActivePage, setIsModalOpen }) => {
             <span>My Properties</span>
           </li>
           <li 
-            className={activePage === 'profile' ? 'active' : ''}  // New profile option
+            className={activePage === 'profile' ? 'active' : ''} 
             onClick={() => setActivePage('profile')}
           >
             <i className="fas fa-user"></i>
@@ -44,6 +43,13 @@ const Sidebar = ({ activePage, setActivePage, setIsModalOpen }) => {
           >
             <i className="fas fa-store"></i>
             <span>Marketplace</span>
+          </li>
+          <li 
+            className={activePage === 'purchase-requests' ? 'active' : ''} 
+            onClick={() => setActivePage('purchase-requests')}
+          >
+            <i className="fas fa-handshake"></i>
+            <span>Purchase Requests</span>
           </li>
           <li 
             className={activePage === 'settings' ? 'active' : ''} 

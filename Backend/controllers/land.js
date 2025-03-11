@@ -217,4 +217,44 @@ const getLandHistory = async (req, res) => {
   }
 };
 
-module.exports = { getAllLands,getMarketplaceLands ,getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory }; 
+const acceptPurchaseRequest = async (req, res) => {
+  const { landId, buyerAddress } = req.body;
+
+  try {
+    const { ethereum } = window;
+    if (!ethereum) {
+      throw new Error("MetaMask is not installed!");
+    }
+
+    // Connect to the smart contract
+    const provider = new ethers.BrowserProvider(ethereum);
+    const signer = await provider.getSigner();
+    const landRegistry = new ethers.Contract(
+      contractAddress, // Use environment variable for contract address
+      LandRegistryABI, // Ensure the ABI is imported
+      signer
+    );
+
+    // Call the acceptPurchaseRequest function in the smart contract
+    const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
+    const tx = await landRegistry.acceptPurchaseRequest(landIdHash, buyerAddress);
+
+    // Wait for the transaction to be mined
+    await tx.wait();
+
+    // Update the land record in the database
+    const updatedLand = await Land.findOneAndUpdate(
+      { landId },
+      { ownerAddress: buyerAddress, status: "Sold" },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "Purchase request accepted successfully", updatedLand });
+  } catch (error) {
+    console.error("Error accepting purchase request:", error);
+    res.status(500).json({ error: "Failed to accept purchase request" });
+  }
+};
+
+
+module.exports = { getAllLands,getMarketplaceLands ,getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory, acceptPurchaseRequest}; 

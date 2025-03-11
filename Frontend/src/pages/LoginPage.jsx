@@ -49,7 +49,7 @@ const LoginPage = () => {
 
   const isAuthorized = async(walletAddress) => {
     try{
-      let response= await axios.get("http://localhost:8001/api/users");
+      let response= await axios.get("http://localhost:8002/api/users");
       let allUsers=response.data;
       return allUsers.some(user => user.walletAddress.toLowerCase() === walletAddress.toLowerCase());
     }catch(error){
