@@ -1,6 +1,7 @@
 // src/hooks/useBlockchain.js
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+const PORT = import.meta.env.VITE_PORT;
 
 export default function useBlockchain() {
   const [account, setAccount] = useState(null);
@@ -20,30 +21,33 @@ export default function useBlockchain() {
     }
   }, []);
 
-  const fetchAccountDetails = async (address) => {
-    try {
-      const { ethereum } = window;
-      if (ethereum) {
-        const balance = await ethereum.request({
-          method: 'eth_getBalance',
-          params: [address, 'latest']
-        });
-        setAccountBalance(parseInt(balance, 16) / Math.pow(10, 18));
-      }
-      let response= await axios.get("http://localhost:8002/api/users");
-      let allUsers=response.data;
-      let user= allUsers.find(user => user.walletAddress.toLowerCase() === address.toLowerCase());
-      setcurrentUser(user||null);
-    } catch (error) {
-      console.error('Error fetching account details:', error);
-    }
+  // src/hooks/useBlockchain.js
+const fetchAccountDetails = async (address) => {
+  try {
+    const { ethereum } = window;
     
-  };
+    if (ethereum) {
+      console.log("Ethereum object found");
+      const balance = await ethereum.request({
+        method: 'eth_getBalance',
+        params: [address, 'latest']
+      }); 
+      setAccountBalance(parseInt(balance, 16) / Math.pow(10, 18));
+    }
+    let response = await axios.get(`http://localhost:${PORT}/api/users`);
+    let allUsers = response.data;
+    let user = allUsers.find(user => user.walletAddress.toLowerCase() === address.toLowerCase());
+    setcurrentUser(user || null);
+    console.log("Fetched user details")
+  } catch (error) {
+    console.error('Error fetching account details:', error);
+  }
+};
 
   const fetchUserLands = async (address) => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:8002/api/lands", {
+      const response = await axios.get(`http://localhost:${PORT}/api/lands`, {
         params: { owner: address } // Filter by owner
       });
       setUserLands(response.data);

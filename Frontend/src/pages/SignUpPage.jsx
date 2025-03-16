@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/SignUpPage.css';
 import axios from 'axios'; // Import axios for backend API calls
+const PORT = import.meta.env.VITE_PORT;
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ const SignUpPage = () => {
 
     try {
       // Send data to the backend
-      const response = await axios.post("http://localhost:8001/api/users", formData, {
+      const response = await axios.post(`http://localhost:${PORT}/api/users`, formData, {
         headers: {
           'Content-Type': 'application/json',
         },

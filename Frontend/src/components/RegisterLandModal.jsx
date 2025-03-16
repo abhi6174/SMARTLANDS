@@ -5,8 +5,10 @@ import useBlockchain from "../hooks/useBlockchain";
 import axios from 'axios';
 import {ethers} from 'ethers';
 import LandRegistryABI from '../contracts/LandRegistryABI';
-
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+const PORT = import.meta.env.VITE_PORT;
+
+
 const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
   const { currentUser } = useBlockchain();
   const [formData, setFormData] = useState({
@@ -48,6 +50,19 @@ const handleSubmit = async (e) => {
   setIsSubmitting(true);
   setError(null);
 
+  // Generate landId using the same logic as the smart contract
+  const landId = ethers.solidityPackedKeccak256(
+    ["uint256", "string", "string", "string", "uint256", "uint256"], // Types of the parameters
+    [
+      formData.landArea, // uint256
+      formData.district, // string
+      formData.taluk,    // string
+      formData.village,  // string
+      formData.blockNumber, // uint256
+      formData.surveyNumber // uint256
+    ]
+  );
+
   const newLand = {
     ownerName: formData.ownerName,
     landArea: formData.landArea,
@@ -59,6 +74,7 @@ const handleSubmit = async (e) => {
     registrationDate: new Date().toISOString().split('T')[0],
     status: "not verified",
     walletAddress: account, // Use the connected wallet address
+    landId: landId, // Add landId to the document
   };
 
   console.log("Form Data Submitted:", newLand);
@@ -69,7 +85,7 @@ const handleSubmit = async (e) => {
     if (!ethereum) {
       throw new Error("MetaMask is not installed!");
     }
-  
+
     // Connect to the smart contract
     const provider = new ethers.BrowserProvider(ethereum);
     const signer = await provider.getSigner();
@@ -79,16 +95,16 @@ const handleSubmit = async (e) => {
       signer
     );
 
-    // Call the registerLand function
+    // Call the registerLand function in the smart contract
     const tx = await landRegistry.registerLand(
-      newLand.ownerName,
-      newLand.landArea,
-      newLand.district,
-      newLand.taluk,
-      newLand.village,
-      newLand.blockNumber,
-      newLand.surveyNumber,
-      { gasLimit: 500000 }
+      formData.ownerName,
+      formData.landArea,
+      formData.district,
+      formData.taluk,
+      formData.village,
+      formData.blockNumber,
+      formData.surveyNumber,
+      { gasLimit: 2000000 } // Adjust gas limit as needed
     );
 
     // Wait for the transaction to be mined
@@ -97,7 +113,7 @@ const handleSubmit = async (e) => {
     console.log("Land registered successfully on the blockchain!");
 
     // Save land details to the backend database
-    const response = await axios.post("http://localhost:8002/api/lands", newLand, {
+    const response = await axios.post(`http://localhost:${PORT}/api/lands`, newLand, {
       headers: {
         'Content-Type': 'application/json',
       },

@@ -30,7 +30,7 @@ const SearchBar = () => {
   return (
     <div className="search-section">
       <div className="search-header">
-        <h2>My Land Registry</h2>
+
       </div>
       <div className="search-bar">
         <input

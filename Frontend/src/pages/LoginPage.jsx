@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/LoginPage.css";
 import axios from "axios";
+const PORT = import.meta.env.VITE_PORT;
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const LoginPage = () => {
 
   const isAuthorized = async(walletAddress) => {
     try{
-      let response= await axios.get("http://localhost:8002/api/users");
+      let response= await axios.get(`http://localhost:${PORT}/api/users`);
       let allUsers=response.data;
       return allUsers.some(user => user.walletAddress.toLowerCase() === walletAddress.toLowerCase());
     }catch(error){

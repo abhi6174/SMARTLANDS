@@ -7,7 +7,7 @@ const MyProfile = () => {
 
   return (
     <div className="profile-content">
-      <h2>My Profile</h2>
+
       
       <div className="profile-details">
         <div className="profile-card">

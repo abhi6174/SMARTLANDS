@@ -9,8 +9,17 @@ const  landSchema = new mongoose.Schema({
   blockNumber: { type: Number, required: true },
   surveyNumber: { type: Number, required: true },
   walletAddress: { type: String, required: true },
+  landId: { type: String, required: true, unique: true }, // Add landId field
   registrationDate: { type: String },
-  status: { type: String, default: "not verified" }
+  status: { type: String, default: "not verified" },
+  purchaseRequests: [
+    {
+      buyerAddress: { type: String, required: true },
+      buyerName: { type: String, required: true },
+      status: { type: String, default: "pending" }, // pending, accepted, rejected
+      timestamp: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 
