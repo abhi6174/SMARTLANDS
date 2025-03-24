@@ -1,5 +1,5 @@
 
-const LandRegistryABI= [
+const LandRegistryABI=[
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -322,14 +322,9 @@ const LandRegistryABI= [
         "internalType": "bytes32",
         "name": "_landId",
         "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "_newOwner",
-        "type": "address"
       }
     ],
-    "name": "transferOwnership",
+    "name": "transferLandOwnership",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -347,5 +342,5 @@ const LandRegistryABI= [
     "stateMutability": "nonpayable",
     "type": "function"
   }
-  ]
+]
   export default LandRegistryABI;

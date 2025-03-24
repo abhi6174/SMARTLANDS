@@ -11,7 +11,6 @@ html, body {
   overflow: hidden;
 }
 
-/* App Container */
 .app-container {
   display: flex;
   width: 100%;
@@ -19,7 +18,7 @@ html, body {
   overflow: hidden;
 }
 
-/* Sidebar Styling */
+
 .sidebar {
   width: 250px;
   background: #2c3e50;
@@ -86,7 +85,7 @@ html, body {
   background: #34495e;
 }
 
-/* Main Content */
+
 .main-content {
   flex: 1;
   display: flex;
@@ -103,7 +102,7 @@ html, body {
   margin-left: 250px;
 }
 
-/* Header */
+
 .content-header {
   display: flex;
   justify-content: space-between;
@@ -120,7 +119,6 @@ html, body {
   color: #333;
 }
 
-/* Dashboard Stats */
 .dashboard-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -153,7 +151,6 @@ html, body {
   font-weight: bold;
 }
 
-/* Registered Lands Section */
 .registered-lands-section {
   margin-top: 20px;
 }
@@ -176,7 +173,7 @@ html, body {
   transform: translateY(-5px);
 }
 
-/* Search Bar */
+
 .search-section {
   display: flex;
   justify-content: space-between;
@@ -216,15 +213,15 @@ html, body {
   background: #c0392b;
   color: white;
 }
-/* Sidebar Logout Button */
+
 .logout-button {
-  width: 100%; /* Full width */
+  width: 100%; 
   padding: 12px;
-  margin-top: auto; /* Push to bottom */
+  margin-top: auto; 
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #3498db; /* Red logout color */
+  background-color: #3498db; 
   color: white;
   border: none;
   font-size: 16px;
@@ -235,16 +232,16 @@ html, body {
 }
 
 .logout-button i {
-  margin-right: 8px; /* Space between icon and text */
+  margin-right: 8px; 
   font-size: 18px;
 }
 
 .logout-button:hover {
-  background-color: #2a79ad; /* Darker red on hover */
+  background-color: #2a79ad; 
 }
-/* src/styles/UserPage.css */
 
-/* Profile Content */
+
+
 .profile-content {
   padding: 20px;
 }
@@ -326,7 +323,7 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
-/* Responsive Sidebar */
+
 @media (min-width: 768px) {
   .sidebar {
     left: 0;

@@ -1,4 +1,4 @@
-/* LoginPage.css */
+
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -8,7 +8,7 @@
 }
 
 .navbar {
-  background-color: #ffffff;
+  background-color: whitesmoke;
   padding: 1rem 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   display: flex;
@@ -195,7 +195,6 @@
   color: white;
 }
 
-/* Responsive adjustments */
 @media (max-width: 640px) {
   .login-container {
     padding: 1rem;

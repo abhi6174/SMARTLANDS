@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npx hardhat test",
     "clean": "rm -rf artifacts/ cache/ ignition/deployments/",
     "compile": "npm run clean && npx hardhat compile",
     "deploy": "npm run compile && npx hardhat ignition deploy ./ignition/modules/LandRegistry.js --network amoy",

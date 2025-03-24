@@ -14,7 +14,7 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
   const [formData, setFormData] = useState({
     ownerName: "",
     landArea: "",
-    landUnit: "SqFt",
+    landUnit: "cent",
     district: "",
     taluk: "",
     village: "",
@@ -174,7 +174,7 @@ const handleSubmit = async (e) => {
                 value={formData.landUnit}
                 onChange={handleChange}
               >
-                <option value="SqFt">Square Feet</option>
+                <option value="SqFt">cent</option>
               </select>
             </div>
           </div>

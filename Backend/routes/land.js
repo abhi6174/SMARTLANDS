@@ -3,11 +3,11 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getAllLands,
+  getUserLands,
   getMarketplaceLands,
   getLandById,
   createLand,
-  getLandHistory,
+  getLandsForPayment,
   getLandsWithPurchaseRequests,
   transferLandOwnership,
   updateLandById,
@@ -19,8 +19,9 @@ const {
 // Define the /marketplace route BEFORE the /:id route
 router.get("/marketplace", getMarketplaceLands);
 router.get("/getpurchase-requests", getLandsWithPurchaseRequests);
+router.get("/lands-for-payment", getLandsForPayment);
 router.route("/")
-  .get(getAllLands)
+  .get(getUserLands)
   .post(createLand);
 
 router.route("/:id")
@@ -30,7 +31,6 @@ router.route("/:id")
 
 router.post("/transfer", transferLandOwnership);
 module.exports = router;
-router.get("/history/:landId", getLandHistory);
 router.post("/purchase-request", addPurchaseRequest);
 router.post("/accept-purchase-request", acceptPurchaseRequest);
 module.exports = router;

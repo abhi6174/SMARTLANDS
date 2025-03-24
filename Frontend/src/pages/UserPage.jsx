@@ -8,6 +8,7 @@ import PurchaseRequests from '../components/PurchaseRequests';
 import '../styles/UserPage.css';
 import useBlockchain from '../hooks/useBlockchain';
 import LandMarketplace from "../components/LandMarketplace";
+import BuyerPayment from "../components/BuyerPayment";
 
 const UserPage = () => {
   const [activePage, setActivePage] = useState('dashboard');
@@ -29,8 +30,9 @@ const UserPage = () => {
                activePage === 'profile' ? 'My Profile' : 
                activePage === 'marketplace' ? 'Land Marketplace' : 
                activePage === 'purchase-requests' ? 'Purchase Requests' : 
+               activePage === 'buyer-payment'?'Payment section':
                'Account Settings'}</h2>
-          <p className="blockchain-network">Network: Ethereum Testnet</p>
+          <p className="blockchain-network">Network: Amoy Testnet</p>
         </header>
 
         <div className="content-container">
@@ -39,6 +41,7 @@ const UserPage = () => {
           {activePage === 'profile' && <MyProfile />}
           {activePage === 'marketplace' && <LandMarketplace />}
           {activePage === 'purchase-requests' && <PurchaseRequests />}
+          {activePage === 'buyer-payment' && <BuyerPayment />}
           {activePage === 'settings' && (
             <div className="placeholder-content">
               <h3>Account Settings</h3>
