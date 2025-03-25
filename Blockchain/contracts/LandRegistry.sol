@@ -55,7 +55,7 @@ contract LandRegistry is Ownable {
         emit Debug(landId); // Log the landId for debugging
     }
 
-    function transferLandOwnership(bytes32 _landId) external payable {
+    function transferLandOwnership(bytes32 _landId,string memory _ownerName) external payable {
         require(lands[_landId].exists, "Land does not exist");
         require(msg.value == 0.01 ether, "Must pay exactly 0.01 MATIC");
         
@@ -64,7 +64,7 @@ contract LandRegistry is Ownable {
         
         // Update state BEFORE transfer (Checks-Effects-Interactions pattern)
         land.ownerAddress = msg.sender;
-        
+        land.ownerName = _ownerName;
         // Send MATIC - must use .call() with proper error handling
         (bool sent, ) = previousOwner.call{value: msg.value}("");
         require(sent, "MATIC transfer failed");

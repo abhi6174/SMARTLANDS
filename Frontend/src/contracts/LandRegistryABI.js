@@ -322,6 +322,11 @@ const LandRegistryABI=[
         "internalType": "bytes32",
         "name": "_landId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "_ownerName",
+        "type": "string"
       }
     ],
     "name": "transferLandOwnership",

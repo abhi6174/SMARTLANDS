@@ -58,11 +58,11 @@ const BuyerPayment = () => {
       const landIdBytes32 = landId; // Assuming landId is already a bytes32 value
       console.log("landId:", landIdBytes32);
 
-      const tx = await landRegistry.transferLandOwnership(landIdBytes32, {
+      const tx = await landRegistry.transferLandOwnership(landIdBytes32,currentUser.name, {
         value: ethers.parseEther("0.01"), // Buyer pays 0.01 MATIC
       });
 
-      console.log("Transaction sent:", tx.hash);txHash: tx.hash
+      console.log("Transaction sent:", tx.hash);
       const receipt = await tx.wait();
       console.log("Transaction receipt:", receipt);
 
