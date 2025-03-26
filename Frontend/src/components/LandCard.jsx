@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/LandCard.css';
 import useBlockchain from '../hooks/useBlockchain';
-
+const PORT = import.meta.env.VITE_PORT;
 const LandCard = ({ land, isMarketplace }) => {
   const { account } = useBlockchain();
 
@@ -11,7 +11,7 @@ const LandCard = ({ land, isMarketplace }) => {
 
   const handlePurchase = async () => {
     try {
-      const response = await fetch("http://localhost:8002/api/lands/purchase", {
+      const response = await fetch( `http://localhost:${PORT}/api/lands/purchase`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

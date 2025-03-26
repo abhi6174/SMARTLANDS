@@ -1,7 +1,6 @@
-// backend/controllers/land.js
 const Land = require('../models/land');
 const ethers = require('ethers');
-const { landRegistry } = require('../config/contract'); // Import the contract instance
+const { landRegistry } = require('../config/contract');
 
 // ABI for the LandRegistered event
 const landRegisteredAbi = [
@@ -21,31 +20,26 @@ const decodeLandRegisteredEvent = (log) => {
   };
 };
 
-// File: backend/controllers/land.js
 const getMarketplaceLands = async (req, res) => {
   try {
-    const { owner } = req.query; // Get the owner's wallet address from query params
+    const { owner } = req.query;
 
-    // Validate the owner query parameter
     if (!owner) {
-      return res.status(400).json({ error: "Owner wallet address is required" });
+      return res.status(400).json({ 
+        success: false,
+        error: "Owner wallet address is required" 
+      });
     }
 
-
-    // Get all LandRegistered events
     const filter = landRegistry.filters.LandRegistered();
     const events = await landRegistry.queryFilter(filter);
 
     const marketplaceLands = [];
 
     for (const event of events) {
-      // Decode the event log
       const decodedEvent = decodeLandRegisteredEvent(event);
-
-      // Get additional details from the contract
       const landDetails = await landRegistry.lands(decodedEvent.landId);
 
-      // Exclude lands owned by the current user
       if (decodedEvent.owner.toLowerCase() !== owner.toLowerCase()) {
         marketplaceLands.push({
           landId: decodedEvent.landId.toString(),
@@ -62,71 +56,76 @@ const getMarketplaceLands = async (req, res) => {
       }
     }
 
-    res.status(200).json(marketplaceLands);
+    res.status(200).json({ 
+      success: true,
+      data: marketplaceLands 
+    });
   } catch (error) {
     console.error("Error fetching marketplace lands:", error);
-    res.status(500).json({ error: "Failed to fetch marketplace lands" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to fetch marketplace lands" 
+    });
   }
 };
-// Function to get all registered lands
 
+// controllers/land.js
 const getAllLands = async (req, res) => {
   try {
-    const { owner } = req.query; // Get the owner's wallet address from query params
-    // Get all LandRegistered events
-    const filter = landRegistry.filters.LandRegistered();
-    const events = await landRegistry.queryFilter(filter);
+    const { owner } = req.query;
+    let lands = [];
 
-    const lands = [];
-
-    for (const event of events) {
-      // Decode the event log
-      const decodedEvent = decodeLandRegisteredEvent(event);
-
-      // Get additional details from the contract
-      const landDetails = await landRegistry.lands(decodedEvent.landId);
-
-      // Filter lands by owner's wallet address (if provided)
-      if (!owner || decodedEvent.owner.toLowerCase() === owner.toLowerCase()) {
-        lands.push({
-          landId: decodedEvent.landId.toString(),
-          ownerName: decodedEvent.ownerName,
-          landArea: landDetails.landArea.toString(),
-          district: landDetails.district,
-          taluk: landDetails.taluk,
-          village: landDetails.village,
-          blockNumber: landDetails.blockNumber.toString(),
-          surveyNumber: landDetails.surveyNumber.toString(),
-          ownerAddress: decodedEvent.owner,
-          status: "Verified",
-        });
-      }
+    if (owner) {
+      // Filter lands by owner
+      lands = await Land.find({ walletAddress: owner });
+    } else {
+      // Get all lands
+      lands = await Land.find({});
     }
 
-    res.status(200).json(lands);
+    res.status(200).json({ 
+      success: true,
+      data: lands || [] // Ensure we always return an array
+    });
   } catch (error) {
     console.error("Error fetching lands:", error);
-    res.status(500).json({ error: "Failed to fetch lands" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to fetch lands",
+      data: [] // Return empty array on error
+    });
   }
 };
-
 
 const getLandById = async (req, res) => {
   try {
     const land = await Land.findById(req.params.id);
-    if (!land) return res.status(404).json({ error: "Land not found" });
-    res.status(200).json(land);
+    if (!land) {
+      return res.status(404).json({ 
+        success: false,
+        error: "Land not found" 
+      });
+    }
+    res.status(200).json({ 
+      success: true,
+      data: land 
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve land" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to retrieve land" 
+    });
   }
 };
-// File: backend/controllers/land.js  
 
 const createLand = async (req, res) => {
   const { ownerName, landArea, district, taluk, village, blockNumber, surveyNumber, walletAddress } = req.body;
 
   if (!ownerName || !landArea || !district || !taluk || !village || !blockNumber || !surveyNumber || !walletAddress) {
-    return res.status(400).json({ error: "All fields are required" });
+    return res.status(400).json({ 
+      success: false,
+      error: "All fields are required" 
+    });
   }
 
   const sanitizedData = {
@@ -138,62 +137,128 @@ const createLand = async (req, res) => {
     blockNumber: parseInt(blockNumber),
     surveyNumber: parseInt(surveyNumber),
     walletAddress: walletAddress,
+    registrationDate: new Date().toISOString(),
+    status: "Pending Verification"
   };
 
   try {
     const newLand = new Land(sanitizedData);
     await newLand.save();
-    console.log("Land added successfully:", newLand);
-    res.status(201).json({ message: "Land added successfully", land: newLand });
+    
+    res.status(201).json({ 
+      success: true,
+      message: "Land added successfully", 
+      data: newLand 
+    });
   } catch (error) {
     console.error("Error adding land:", error);
     if (error.code === 11000) {
-      return res.status(400).json({ error: "Survey number already exists" });
+      return res.status(400).json({ 
+        success: false,
+        error: "Survey number already exists" 
+      });
     }
     if (error.name === "ValidationError") {
-      return res.status(400).json({ error: error.message });
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
     }
-    res.status(500).json({ error: "Failed to add land" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to add land" 
+    });
   }
 };
 
 const updateLandById = async (req, res) => {
   try {
-    const updatedLand = await Land.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedLand) return res.status(404).json({ error: "Land record not found" });
-    res.status(200).json({ message: "Land details updated", updatedLand });
+    const updatedLand = await Land.findByIdAndUpdate(
+      req.params.id, 
+      req.body, 
+      { new: true }
+    );
+    
+    if (!updatedLand) {
+      return res.status(404).json({ 
+        success: false,
+        error: "Land record not found" 
+      });
+    }
+    
+    res.status(200).json({ 
+      success: true,
+      message: "Land details updated", 
+      data: updatedLand 
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update land details" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to update land details" 
+    });
   }
 };
 
 const deleteLandById = async (req, res) => {
   try {
     const deletedLand = await Land.findByIdAndDelete(req.params.id);
-    if (!deletedLand) return res.status(404).json({ error: "Land not found" });
-    res.status(200).json({ message: "Land record deleted", deletedLand });
+    
+    if (!deletedLand) {
+      return res.status(404).json({ 
+        success: false,
+        error: "Land not found" 
+      });
+    }
+    
+    res.status(200).json({ 
+      success: true,
+      message: "Land record deleted", 
+      data: deletedLand 
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete land record" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to delete land record" 
+    });
   }
 };
 
 const transferLandOwnership = async (req, res) => {
   const { landId, newOwnerAddress } = req.body;
+  
   try {
     const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
-    const tx = await landRegistry.transferOwnership(landIdHash, newOwnerAddress, {
-      value: ethers.parseEther("0.01") // Changed to 0.01 MATIC (0.01 ether units)
-    });
+    const tx = await landRegistry.transferOwnership(
+      landIdHash, 
+      newOwnerAddress, 
+      { value: ethers.parseEther("0.01") }
+    );
+    
     await tx.wait();
-    res.status(200).json({ message: "Ownership transferred successfully", txHash: tx.hash });
+    
+    // Update database record
+    await Land.findOneAndUpdate(
+      { landId },
+      { ownerAddress: newOwnerAddress, status: "Transferred" }
+    );
+
+    res.status(200).json({ 
+      success: true,
+      message: "Ownership transferred successfully", 
+      txHash: tx.hash 
+    });
   } catch (error) {
     console.error("Error transferring ownership:", error);
-    res.status(500).json({ error: "Failed to transfer ownership" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to transfer ownership" 
+    });
   }
 };
 
 const getLandHistory = async (req, res) => {
   const { landId } = req.params;
+  
   try {
     const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
     const logs = await provider.getLogs({
@@ -205,15 +270,24 @@ const getLandHistory = async (req, res) => {
         landIdHash
       ]
     });
+    
     const transfers = logs.map(log => ({
       txHash: log.transactionHash,
       blockNumber: log.blockNumber,
       from: ethers.getAddress('0x' + log.topics[2].slice(-40)),
-      to: ethers.getAddress('0x' + log.topics[3].slice(-40))
+      to: ethers.getAddress('0x' + log.topics[3].slice(-40)),
+      timestamp: new Date(log.blockTimestamp * 1000).toISOString()
     }));
-    res.status(200).json(transfers);
+    
+    res.status(200).json({ 
+      success: true,
+      data: transfers 
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch land history" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to fetch land history" 
+    });
   }
 };
 
@@ -221,40 +295,124 @@ const acceptPurchaseRequest = async (req, res) => {
   const { landId, buyerAddress } = req.body;
 
   try {
-    const { ethereum } = window;
-    if (!ethereum) {
-      throw new Error("MetaMask is not installed!");
-    }
-
-    // Connect to the smart contract
-    const provider = new ethers.BrowserProvider(ethereum);
+    const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
-    const landRegistry = new ethers.Contract(
-      contractAddress, // Use environment variable for contract address
-      LandRegistryABI, // Ensure the ABI is imported
+    const contract = new ethers.Contract(
+      process.env.CONTRACT_ADDRESS,
+      LandRegistryABI,
       signer
     );
 
-    // Call the acceptPurchaseRequest function in the smart contract
     const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
-    const tx = await landRegistry.acceptPurchaseRequest(landIdHash, buyerAddress);
-
-    // Wait for the transaction to be mined
+    const tx = await contract.acceptPurchaseRequest(landIdHash, buyerAddress);
     await tx.wait();
 
-    // Update the land record in the database
     const updatedLand = await Land.findOneAndUpdate(
       { landId },
-      { ownerAddress: buyerAddress, status: "Sold" },
+      { 
+        ownerAddress: buyerAddress, 
+        status: "Sold",
+        lastTransfer: new Date().toISOString()
+      },
       { new: true }
     );
 
-    res.status(200).json({ message: "Purchase request accepted successfully", updatedLand });
+    res.status(200).json({ 
+      success: true,
+      message: "Purchase request accepted successfully", 
+      data: updatedLand,
+      txHash: tx.hash
+    });
   } catch (error) {
     console.error("Error accepting purchase request:", error);
-    res.status(500).json({ error: "Failed to accept purchase request" });
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to accept purchase request" 
+    });
   }
 };
 
+const getNonVerifiedLands = async (req, res) => {
+  try {
+    const lands = await Land.find({ status: { $ne: "Verified" } });
+    
+    // Also check blockchain for pending verifications
+    const filter = landRegistry.filters.LandRegistered();
+    const events = await landRegistry.queryFilter(filter);
+    
+    const blockchainPending = [];
+    
+    for (const event of events) {
+      const decodedEvent = decodeLandRegisteredEvent(event);
+      const landDetails = await landRegistry.lands(decodedEvent.landId);
+      
+      if (landDetails.status !== "Verified") {
+        blockchainPending.push({
+          landId: decodedEvent.landId.toString(),
+          ownerName: decodedEvent.ownerName,
+          ownerAddress: decodedEvent.owner,
+          district: landDetails.district,
+          taluk: landDetails.taluk,
+          village: landDetails.village,
+          status: "Pending Verification"
+        });
+      }
+    }
 
-module.exports = { getAllLands,getMarketplaceLands ,getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory, acceptPurchaseRequest}; 
+    res.status(200).json({ 
+      success: true,
+      data: [...lands, ...blockchainPending] 
+    });
+  } catch (error) {
+    console.error("Error fetching non-verified lands:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to fetch non-verified lands" 
+    });
+  }
+};
+
+const verifyLand = async (req, res) => {
+  try {
+    const { landId } = req.body;
+    
+    // Update database
+    const dbLand = await Land.findByIdAndUpdate(
+      landId,
+      { status: "Verified", verificationDate: new Date() },
+      { new: true }
+    );
+    
+    // Update blockchain
+    const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(dbLand._id.toString()));
+    const tx = await landRegistry.verifyLand(landIdHash);
+    await tx.wait();
+
+    res.status(200).json({ 
+      success: true,
+      message: "Land verified successfully",
+      data: dbLand,
+      txHash: tx.hash
+    });
+  } catch (error) {
+    console.error("Error verifying land:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to verify land" 
+    });
+  }
+};
+
+module.exports = {
+  getAllLands,
+  getMarketplaceLands,
+  getNonVerifiedLands,
+  verifyLand,
+  getLandById,
+  createLand,
+  updateLandById,
+  deleteLandById,
+  transferLandOwnership,
+  getLandHistory,
+  acceptPurchaseRequest
+};

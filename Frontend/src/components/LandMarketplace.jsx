@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import LandCard from "./LandCard";
 import useBlockchain from "../hooks/useBlockchain";
 import "../styles/LandMarketplace.css";
-
+const PORT = import.meta.env.VITE_PORT;
 const LandMarketplace = () => {
   const { account } = useBlockchain();
   const [marketplaceLands, setMarketplaceLands] = useState([]);
@@ -18,7 +18,7 @@ const LandMarketplace = () => {
       try {
         console.log("Fetching marketplace lands for account:", account);
         const response = await fetch(
-          `http://localhost:8002/api/lands/marketplace?owner=${encodeURIComponent(account)}`
+          `http://localhost:${PORT}/api/lands/marketplace?owner=${encodeURIComponent(account)}`
         );
 
         if (!response.ok) {

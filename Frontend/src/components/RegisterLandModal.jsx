@@ -5,7 +5,7 @@ import useBlockchain from "../hooks/useBlockchain";
 import axios from 'axios';
 import {ethers} from 'ethers';
 import LandRegistryABI from '../contracts/LandRegistryABI';
-
+const PORT = import.meta.env.VITE_PORT;
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
   const { currentUser } = useBlockchain();
@@ -97,7 +97,7 @@ const handleSubmit = async (e) => {
     console.log("Land registered successfully on the blockchain!");
 
     // Save land details to the backend database
-    const response = await axios.post("http://localhost:8002/api/lands", newLand, {
+    const response = await axios.post(`http://localhost:${PORT}/api/lands`, newLand, {
       headers: {
         'Content-Type': 'application/json',
       },

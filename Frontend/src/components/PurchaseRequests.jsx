@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import useBlockchain from '../hooks/useBlockchain';
 import '../styles/PurchaseRequests.css';
-
+const PORT = import.meta.env.VITE_PORT;
 const PurchaseRequests = () => {
   const { account } = useBlockchain();
   const [purchaseRequests, setPurchaseRequests] = useState([]);
@@ -10,7 +10,7 @@ const PurchaseRequests = () => {
   useEffect(() => {
     const fetchPurchaseRequests = async () => {
       try {
-        const response = await fetch(`http://localhost:8002/api/lands/purchase-requests?owner=${encodeURIComponent(account)}`);
+        const response = await fetch(`http://localhost:${PORT}/api/lands/purchase-requests?owner=${encodeURIComponent(account)}`);
         if (!response.ok) {
           throw new Error("Failed to fetch purchase requests");
         }
@@ -29,7 +29,7 @@ const PurchaseRequests = () => {
 
   const handleAcceptRequest = async (landId, buyerAddress) => {
     try {
-      const response = await fetch("http://localhost:8002/api/lands/accept-purchase-request", {
+      const response = await fetch(`http://localhost:${PORT}/api/lands/accept-purchase-request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

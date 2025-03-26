@@ -22,9 +22,26 @@ const userSchema = new mongoose.Schema({
             },
             message: props => `${props.value} is not a valid Ethereum wallet address!`
         }
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
     }
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    collection: 'users'
+});
 
-const User = mongoose.model("user", userSchema);
+
+const User = mongoose.model('user', userSchema);
 
 module.exports = User;
