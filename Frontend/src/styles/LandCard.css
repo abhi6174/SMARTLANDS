@@ -42,7 +42,14 @@
     cursor: pointer;
     border-radius: 5px;
   }
-  
+.land-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px; 
+}
   .purchase-button:hover {
     background-color: #45a049;
   }

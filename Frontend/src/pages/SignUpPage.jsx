@@ -1,16 +1,18 @@
-// src/pages/SignUpPage.jsx
 import React, { useState } from 'react';
-import '../styles/SignUpPage.css'; // Create this stylesheet
+import '../styles/SignUpPage.css';
+import axios from 'axios'; // Import axios for backend API calls
+const PORT = import.meta.env.VITE_PORT;
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    walletAddress: "", // We'll use MetaMask to fill this
+    walletAddress: "", // Will be populated by MetaMask
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -19,6 +21,7 @@ const SignUpPage = () => {
     });
   };
 
+  // Connect MetaMask wallet
   const connectWallet = async () => {
     try {
       const { ethereum } = window;
@@ -27,11 +30,12 @@ const SignUpPage = () => {
         return;
       }
 
+      // Request account access
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       if (accounts.length > 0) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          walletAddress: accounts[0],
+          walletAddress: accounts[0], // Set the wallet address
         }));
         setError("");
       } else {
@@ -43,26 +47,45 @@ const SignUpPage = () => {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
 
-    try {
-      // Simulate registration (replace with actual backend/blockchain logic)
-      console.log("Registering new user:", formData);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay
+    // Validate form data
+    if (!formData.name || !formData.email || !formData.walletAddress) {
+      setError("All fields are required.");
+      setIsSubmitting(false);
+      return;
+    }
 
-      // Reset form after success (or redirect if needed)
-      setFormData({
-        name: "",
-        email: "",
-        walletAddress: "",
+    try {
+      // Send data to the backend
+      const response = await axios.post(`http://localhost:${PORT}/api/users`, formData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-      alert("Registration successful! Please log in.");
+
+      if (response.status === 201) {
+        alert("Registration successful! Please log in.");
+        // Reset form after successful registration
+        setFormData({
+          name: "",
+          email: "",
+          walletAddress: "",
+        });
+      } else {
+        setError("Failed to register. Please try again.");
+      }
     } catch (err) {
       console.error("Registration error:", err);
-      setError("Failed to register. Please try again.");
+      if (err.response && err.response.data.error) {
+        setError(err.response.data.error); // Display backend error message
+      } else {
+        setError("Failed to register. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }

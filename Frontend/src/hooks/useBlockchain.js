@@ -1,6 +1,7 @@
 // src/hooks/useBlockchain.js
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+const PORT = import.meta.env.VITE_PORT;
 
 export default function useBlockchain() {
   const [account, setAccount] = useState(null);

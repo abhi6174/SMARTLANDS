@@ -40,7 +40,6 @@ const LandMarketplace = () => {
 
   return (
     <div className="land-marketplace">
-      <h2>Land Marketplace</h2>
       {isLoading ? (
         <div className="loading-indicator">Loading marketplace lands...</div>
       ) : marketplaceLands.length > 0 ? (

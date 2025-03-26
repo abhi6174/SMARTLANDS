@@ -9,9 +9,11 @@ const {
   getLandById,
   createLand,
   getLandHistory,
+  getLandsWithPurchaseRequests,
   transferLandOwnership,
   updateLandById,
   deleteLandById,
+  addPurchaseRequest,
   acceptPurchaseRequest,
   getNonVerifiedLands,
   verifyLand
@@ -20,7 +22,7 @@ const {
 
 // Define the /marketplace route BEFORE the /:id route
 router.get("/marketplace", getMarketplaceLands);
-
+router.get("/getpurchase-requests", getLandsWithPurchaseRequests);
 router.route("/")
   .get(getAllLands)
   .post(createLand);
@@ -45,6 +47,8 @@ router.get("/admin/lands", adminCheck, async (req, res) => {
 });
 router.get('/admin/lands/pending', adminCheck, getNonVerifiedLands);
 router.post("/transfer", transferLandOwnership);
+module.exports = router;
 router.get("/history/:landId", getLandHistory);
+router.post("/purchase-request", addPurchaseRequest);
 router.post("/accept-purchase-request", acceptPurchaseRequest);
 module.exports = router;

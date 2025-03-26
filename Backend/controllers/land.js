@@ -2,6 +2,55 @@ const Land = require('../models/land');
 const ethers = require('ethers');
 const { landRegistry } = require('../config/contract');
 
+const getLandsWithPurchaseRequests = async (req, res) => {
+  try {
+    const { owner } = req.query;
+    console.log("Owner:", owner);
+
+    if (!owner) {
+      return res.status(400).json({ error: "Owner wallet address is required" });
+    }
+
+    // Fetch lands where the seller is the owner and purchaseRequests exist
+    const lands = await Land.find({
+      walletAddress: owner.toLowerCase(), // Seller's wallet address
+      purchaseRequests: { $exists: true, $not: { $size: 0 } }, // Ensure purchaseRequests array is not empty
+    });
+
+    console.log("Lands with purchase requests:", lands);
+    res.status(200).json(lands);
+  } catch (error) {
+    console.error("Error fetching lands with purchase requests:", error);
+    res.status(500).json({ error: "Failed to fetch lands" });
+  }
+};
+
+const addPurchaseRequest = async (req, res) => {
+  const { landId, buyerAddress, buyerName } = req.body;
+
+  console.log("Received purchase request:", { landId, buyerAddress, buyerName });
+
+  try {
+    // Find the land by landId (keccak hash)
+    const land = await Land.findOne({ landId });
+    console.log("Found land:", land);
+
+    if (!land) {
+      console.error("Land not found for landId:", landId);
+      return res.status(404).json({ error: "Land not found" });
+    }
+
+    // Add the purchase request to the land
+    land.purchaseRequests.push({ buyerAddress, buyerName });
+    await land.save();
+
+    console.log("Purchase request added successfully:", land);
+    res.status(200).json({ message: "Purchase request sent successfully", land });
+  } catch (error) {
+    console.error("Error adding purchase request:", error);
+    res.status(500).json({ error: "Failed to send purchase request" });
+  }
+};
 // ABI for the LandRegistered event
 const landRegisteredAbi = [
   "event LandRegistered(bytes32 indexed landId, address indexed owner, string ownerName)"
@@ -40,7 +89,8 @@ const getMarketplaceLands = async (req, res) => {
       const decodedEvent = decodeLandRegisteredEvent(event);
       const landDetails = await landRegistry.lands(decodedEvent.landId);
 
-      if (decodedEvent.owner.toLowerCase() !== owner.toLowerCase()) {
+      // Exclude lands owned by the current user
+      if (landDetails.ownerAddress.toLowerCase() !== owner.toLowerCase()) {
         marketplaceLands.push({
           landId: decodedEvent.landId.toString(),
           ownerName: decodedEvent.ownerName,
@@ -141,6 +191,25 @@ const createLand = async (req, res) => {
     status: "Pending Verification"
   };
 
+  // Generate landId using the same logic as the smart contract
+  const landId = ethers.solidityPackedKeccak256(
+    ["uint256", "string", "string", "string", "uint256", "uint256"],
+    [sanitizedData.landArea, sanitizedData.district, sanitizedData.taluk, 
+     sanitizedData.village, sanitizedData.blockNumber, sanitizedData.surveyNumber]
+  );
+
+  // Check if land exists on blockchain
+  const existsOnChain = await landRegistry.landExists(landId);
+  if (!existsOnChain) {
+    return res.status(400).json({ error: "Land not registered on blockchain" });
+  } else {
+    console.log("Land is already on blockchain");
+  }
+
+  // Add landId to the sanitizedData object
+  sanitizedData.landId = landId;
+
+  // Proceed to save in MongoDB
   try {
     const newLand = new Land(sanitizedData);
     await newLand.save();
@@ -290,39 +359,28 @@ const getLandHistory = async (req, res) => {
     });
   }
 };
-
 const acceptPurchaseRequest = async (req, res) => {
-  const { landId, buyerAddress } = req.body;
+  const { landId, buyerAddress, buyerName } = req.body; // Add buyerName to the request body
 
   try {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const contract = new ethers.Contract(
-      process.env.CONTRACT_ADDRESS,
-      LandRegistryABI,
-      signer
+    // Find the land by landId
+    const land = await Land.findOne({ landId });
+    if (!land) {
+      return res.status(404).json({ error: "Land not found" });
+    }
+
+    // Update the ownerAddress, ownerName, and status in the database
+    land.ownerAddress = buyerAddress; // Update owner address
+    land.ownerName = buyerName; // Update owner name
+    land.status = "Sold";
+
+    // Remove the accepted purchase request from the array
+    land.purchaseRequests = land.purchaseRequests.filter(
+      request => request.buyerAddress !== buyerAddress
     );
 
-    const landIdHash = ethers.keccak256(ethers.toUtf8Bytes(landId));
-    const tx = await contract.acceptPurchaseRequest(landIdHash, buyerAddress);
-    await tx.wait();
-
-    const updatedLand = await Land.findOneAndUpdate(
-      { landId },
-      { 
-        ownerAddress: buyerAddress, 
-        status: "Sold",
-        lastTransfer: new Date().toISOString()
-      },
-      { new: true }
-    );
-
-    res.status(200).json({ 
-      success: true,
-      message: "Purchase request accepted successfully", 
-      data: updatedLand,
-      txHash: tx.hash
-    });
+    await land.save();
+    res.status(200).json({ message: "Purchase request accepted successfully", land });
   } catch (error) {
     console.error("Error accepting purchase request:", error);
     res.status(500).json({ 
