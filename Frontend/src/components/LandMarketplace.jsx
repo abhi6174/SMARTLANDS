@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import LandCard from "./LandCard";
 import useBlockchain from "../hooks/useBlockchain";
 import "../styles/LandMarketplace.css";
-
+const PORT = import.meta.env.VITE_PORT;
 const LandMarketplace = () => {
   const { account } = useBlockchain();
   const [marketplaceLands, setMarketplaceLands] = useState([]);

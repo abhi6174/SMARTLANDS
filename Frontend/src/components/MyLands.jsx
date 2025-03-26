@@ -4,8 +4,9 @@ import LandCard from './LandCard';
 import useBlockchain from '../hooks/useBlockchain';
 import '../styles/MyLands.css';
 
+// components/MyLands.jsx
 const MyLands = () => {
-  const { userLands, isLoading, account } = useBlockchain();
+  const { userLands = [], isLoading, account } = useBlockchain(); // Default to empty array
 
   return (
     <>
@@ -17,7 +18,10 @@ const MyLands = () => {
         ) : userLands.length > 0 ? (
           <div className="lands-grid">
             {userLands.map(land => (
-              <LandCard key={land.landId} land={land} /> 
+              <LandCard 
+                key={land.landId || land._id} 
+                land={land} 
+              /> 
             ))}
           </div>
         ) : (
@@ -30,5 +34,4 @@ const MyLands = () => {
     </>
   );
 };
-
 export default MyLands;

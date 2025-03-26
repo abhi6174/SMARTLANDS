@@ -8,8 +8,7 @@ export default function useBlockchain() {
   const [userLands, setUserLands] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
+   const PORT = import.meta.env.VITE_PORT;
   useEffect(() => {
     const initialize = async () => {
       const storedAccount = localStorage.getItem('connectedAccount');
@@ -30,7 +29,6 @@ export default function useBlockchain() {
   const fetchAccountDetails = async (address) => {
     try {
       const { ethereum } = window;
-      
       if (ethereum) {
         const balance = await ethereum.request({
           method: 'eth_getBalance',
@@ -38,15 +36,17 @@ export default function useBlockchain() {
         });
         setAccountBalance(parseInt(balance, 16) / Math.pow(10, 18));
       }
-
+      
       const response = await axios.get(`http://localhost:${PORT}/api/users`);
-      const user = response.data.find(user => 
-        user.walletAddress?.toLowerCase() === address?.toLowerCase()
+      // Ensure we handle the response data properly
+      const allUsers = Array.isArray(response.data?.data) ? response.data.data : [];
+      const user = allUsers.find(user => 
+        user.walletAddress?.toLowerCase() === address.toLowerCase()
       );
-      setCurrentUser(user || null);
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching account details:', err);
+      setcurrentUser(user || null);
+    } catch (error) {
+      console.error('Error fetching account details:', error);
+      setcurrentUser(null);
     }
   };
 
@@ -56,10 +56,12 @@ export default function useBlockchain() {
       const response = await axios.get(`http://localhost:${PORT}/api/lands`, {
         params: { owner: address }
       });
-      setUserLands(response.data);
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching user lands:', err);
+      
+      // Ensure we always set an array, even if response structure is unexpected
+      setUserLands(Array.isArray(response.data?.data) ? response.data.data : []);
+    } catch (error) {
+      console.error('Error fetching user lands:', error);
+      setUserLands([]); // Set empty array on error
     } finally {
       setIsLoading(false);
     }

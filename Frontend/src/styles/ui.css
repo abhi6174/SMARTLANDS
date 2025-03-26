@@ -1,0 +1,28 @@
+/* src/styles/ui.css */
+/* Button */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn.primary {
+    background: #3b82f6;
+    color: white;
+  }
+  
+  /* Card */
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  /* Table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .data-table th {
+    text-align: left;
+  }
