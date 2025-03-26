@@ -1,16 +1,12 @@
-// src/components/RegisterLandModal.jsx
 import React, { useState, useEffect } from "react";
-import "../styles/RegisterLandModal.css";
-import useBlockchain from "../hooks/useBlockchain";
-import axios from 'axios';
-import {ethers} from 'ethers';
+import { ethers } from 'ethers';
+import { uploadToIPFS, getIPFSGatewayUrl } from '../services/ipfsService';
 import LandRegistryABI from '../contracts/LandRegistryABI';
-const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
-const PORT = import.meta.env.VITE_PORT;
+import '../styles/RegisterLandModal.css';
 
+const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
-  const { currentUser } = useBlockchain();
   const [formData, setFormData] = useState({
     ownerName: "",
     landArea: "",
@@ -20,115 +16,154 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
     village: "",
     blockNumber: "",
     surveyNumber: "",
+    documentHash: ''
   });
+  const [file, setFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  // Sync ownerName with currentUser.name when currentUser is available
   useEffect(() => {
-    if (currentUser && currentUser.name) {
-      setFormData(prev => ({
-        ...prev,
-        ownerName: currentUser.name,
-      }));
+    if (!isOpen) {
+      // Reset form when modal closes
+      setFormData({
+        ownerName: "",
+        landArea: "",
+        landUnit: "SqFt",
+        district: "",
+        taluk: "",
+        village: "",
+        blockNumber: "",
+        surveyNumber: "",
+        documentHash: ''
+      });
+      setFile(null);
+      setError(null);
+      setSuccess(null);
     }
-  }, [currentUser]);
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Changing ${name} to ${value}`);
     setFormData({
       ...formData,
       [name]: value,
     });
   };
-// File: src/components/RegisterLandModal.jsx
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  console.log("Form submission triggered");
-  setIsSubmitting(true);
-  setError(null);
-
-  // Generate landId using the same logic as the smart contract
-  const landId = ethers.solidityPackedKeccak256(
-    ["uint256", "string", "string", "string", "uint256", "uint256"], // Types of the parameters
-    [
-      formData.landArea, // uint256
-      formData.district, // string
-      formData.taluk,    // string
-      formData.village,  // string
-      formData.blockNumber, // uint256
-      formData.surveyNumber // uint256
-    ]
-  );
-
-  const newLand = {
-    ownerName: formData.ownerName,
-    landArea: formData.landArea,
-    district: formData.district,
-    taluk: formData.taluk,
-    village: formData.village,
-    blockNumber: formData.blockNumber,
-    surveyNumber: formData.surveyNumber,
-    registrationDate: new Date().toISOString().split('T')[0],
-    status: "not verified",
-    walletAddress: account, // Use the connected wallet address
-    landId: landId, // Add landId to the document
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      // Validate file type and size (10MB max)
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 
+                         'application/msword', 
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const isValidType = validTypes.includes(selectedFile.type);
+      const isValidSize = selectedFile.size <= 10 * 1024 * 1024; // 10MB
+      
+      if (isValidType && isValidSize) {
+        setFile(selectedFile);
+        setError(null);
+      } else {
+        setError('Invalid file type or size (>10MB)');
+      }
+    }
   };
 
-  console.log("Form Data Submitted:", newLand);
-
-  try {
-    const { ethereum } = window;
-
-    if (!ethereum) {
-      throw new Error("MetaMask is not installed!");
+  const uploadDocumentToIPFS = async () => {
+    if (!file) return null;
+    
+    setIsUploading(true);
+    setError(null);
+    try {
+      const cid = await uploadToIPFS(file);
+      setFormData(prev => ({ ...prev, documentHash: cid }));
+      return cid;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setError('Document upload failed. Please try again.');
+      throw error;
+    } finally {
+      setIsUploading(false);
     }
+  };
 
-    // Connect to the smart contract
-    const provider = new ethers.BrowserProvider(ethereum);
-    const signer = await provider.getSigner();
-    const landRegistry = new ethers.Contract(
-      contractAddress, // Use environment variable for contract address
-      LandRegistryABI, // Ensure the ABI is imported
-      signer
-    );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Form submission triggered");
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
 
-    // Call the registerLand function in the smart contract
-    const tx = await landRegistry.registerLand(
-      formData.ownerName,
-      formData.landArea,
-      formData.district,
-      formData.taluk,
-      formData.village,
-      formData.blockNumber,
-      formData.surveyNumber,
-      { gasLimit: 2000000 } // Adjust gas limit as needed
-    );
+    try {
+      // First upload document to IPFS if file is selected
+      let documentHash = formData.documentHash;
+      if (file && !documentHash) {
+        documentHash = await uploadDocumentToIPFS();
+      }
 
-    // Wait for the transaction to be mined
-    await tx.wait();
+      // Generate landId including document hash
+      const landId = ethers.solidityPackedKeccak256(
+        ["uint256", "string", "string", "string", "uint256", "uint256", "string"],
+        [
+          formData.landArea,
+          formData.district,
+          formData.taluk,
+          formData.village,
+          formData.blockNumber,
+          formData.surveyNumber,
+          documentHash || "" // Include document hash in ID generation
+        ]
+      );
 
-    console.log("Land registered successfully on the blockchain!");
+      const { ethereum } = window;
+      if (!ethereum) {
+        throw new Error("MetaMask is not installed!");
+      }
 
-    // Save land details to the backend database
-    const response = await axios.post(`http://localhost:${PORT}/api/lands`, newLand, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      // Connect to the smart contract
+      const provider = new ethers.BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+      const landRegistry = new ethers.Contract(
+        contractAddress,
+        LandRegistryABI,
+        signer
+      );
 
-    console.log('Land saved to database:', response.data);
-    await fetchUserLands(account); // Refresh the user's lands
-    onClose();
-  } catch (error) {
-    console.error("Error registering land:", error);
-    setError(error.message || "Failed to register land. Please try again.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      // Call the registerLand function in the smart contract
+      const tx = await landRegistry.registerLand(
+        formData.ownerName,
+        formData.landArea,
+        formData.district,
+        formData.taluk,
+        formData.village,
+        formData.blockNumber,
+        formData.surveyNumber,
+        documentHash || "", // Pass document hash to contract
+        { gasLimit: 2000000 }
+      );
+
+      // Wait for the transaction to be mined
+      await tx.wait();
+
+      console.log("Land registered successfully on the blockchain!");
+      setSuccess("Land registered successfully!");
+      
+      // Refresh user lands
+      await fetchUserLands(account);
+      
+      // Close modal after short delay
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error("Error registering land:", error);
+      setError(error.message || "Failed to register land. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -151,30 +186,33 @@ const handleSubmit = async (e) => {
               name="ownerName"
               value={formData.ownerName}
               onChange={handleChange}
-              placeholder="Loading name..."
               required
-              readOnly // Make uneditable
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="landArea">Land Area</label>
-            <div className="land-area-group">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="landArea">Land Area</label>
               <input
-                type="text"
+                type="number"
                 id="landArea"
                 name="landArea"
                 value={formData.landArea}
                 onChange={handleChange}
-                placeholder="Enter land area"
                 required
               />
+            </div>
+            <div className="form-group">
+              <label htmlFor="landUnit">Unit</label>
               <select
+                id="landUnit"
                 name="landUnit"
                 value={formData.landUnit}
                 onChange={handleChange}
               >
-                <option value="SqFt">Square Feet</option>
+                <option value="SqFt">Sq. Ft</option>
+                <option value="Acres">Acres</option>
+                <option value="Hectares">Hectares</option>
               </select>
             </div>
           </div>
@@ -187,7 +225,6 @@ const handleSubmit = async (e) => {
               name="district"
               value={formData.district}
               onChange={handleChange}
-              placeholder="Enter district"
               required
             />
           </div>
@@ -200,7 +237,6 @@ const handleSubmit = async (e) => {
               name="taluk"
               value={formData.taluk}
               onChange={handleChange}
-              placeholder="Enter taluk"
               required
             />
           </div>
@@ -213,38 +249,74 @@ const handleSubmit = async (e) => {
               name="village"
               value={formData.village}
               onChange={handleChange}
-              placeholder="Enter village"
               required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="blockNo">Block Number</label>
-            <input
-              type="text"
-              id="blockNo"
-              name="blockNumber"
-              value={formData.blockNumber}
-              onChange={handleChange}
-              placeholder="Enter block number"
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="blockNumber">Block Number</label>
+              <input
+                type="number"
+                id="blockNumber"
+                name="blockNumber"
+                value={formData.blockNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="surveyNumber">Survey Number</label>
+              <input
+                type="number"
+                id="surveyNumber"
+                name="surveyNumber"
+                value={formData.surveyNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="surveyNo">Survey Number</label>
+            <label htmlFor="landDocument">Land Document (Optional)</label>
             <input
-              type="text"
-              id="surveyNo"
-              name="surveyNumber"
-              value={formData.surveyNumber}
-              onChange={handleChange}
-              placeholder="Enter survey number"
-              required
+              type="file"
+              id="landDocument"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             />
+            {file && (
+              <div className="file-info">
+                <span>{file.name}</span>
+                {!formData.documentHash && (
+                  <button
+                    type="button"
+                    onClick={uploadDocumentToIPFS}
+                    disabled={isUploading}
+                    className="upload-button"
+                  >
+                    {isUploading ? 'Uploading...' : 'Upload to IPFS'}
+                  </button>
+                )}
+              </div>
+            )}
+            {formData.documentHash && (
+              <div className="ipfs-success">
+                <p>Document stored on IPFS!</p>
+                <a 
+                  href={getIPFSGatewayUrl(formData.documentHash)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Document
+                </a>
+              </div>
+            )}
           </div>
 
           {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
 
           <div className="form-actions">
             <button
@@ -258,7 +330,7 @@ const handleSubmit = async (e) => {
             <button
               type="submit"
               className="submit-button"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (file && !formData.documentHash)}
             >
               {isSubmitting ? "Registering..." : "Register Land"}
             </button>

@@ -171,56 +171,67 @@ const getLandById = async (req, res) => {
 };
 // File: backend/controllers/land.js  
 
+
+// Update the createLand function
 const createLand = async (req, res) => {
   const { ownerName, landArea, district, taluk, village, blockNumber, surveyNumber, walletAddress } = req.body;
 
-  if (!ownerName || !landArea || !district || !taluk || !village || !blockNumber || !surveyNumber || !walletAddress ) {
-    return res.status(400).json({ error: "All fields are required, including landId" });
+  if (!ownerName || !landArea || !district || !taluk || !village || !blockNumber || !surveyNumber || !walletAddress) {
+    return res.status(400).json({ error: "All fields are required" });
   }
 
-  const sanitizedData = {
-    ownerName: ownerName.trim(),
-    landArea: parseFloat(landArea),
-    district: district.trim(),
-    taluk: taluk.trim(),
-    village: village.trim(),
-    blockNumber: parseInt(blockNumber),
-    surveyNumber: parseInt(surveyNumber),
-    walletAddress: walletAddress,
-    status: "not verified",
-  };
-
-  // Generate landId using the same logic as the smart contract
-  const landId = ethers.solidityPackedKeccak256(
-    ["uint256", "string", "string", "string", "uint256", "uint256"],
-    [sanitizedData.landArea, sanitizedData.district, sanitizedData.taluk, 
-     sanitizedData.village, sanitizedData.blockNumber, sanitizedData.surveyNumber]
-  );
-
-  // Check if land exists on blockchain
-  const existsOnChain = await landRegistry.landExists(landId);
-  if (!existsOnChain) {
-    return res.status(400).json({ error: "Land not registered on blockchain" });
-  } else {
-    console.log("Land is already on blockchain");
-  }
-
-  // Add landId to the sanitizedData object
-  sanitizedData.landId = landId;
-
-  // Proceed to save in MongoDB
   try {
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ error: "Land document is required" });
+    }
+
+    // Upload document to IPFS
+    const ipfsHash = await uploadToIPFS(req.file.path);
+
+    // Generate landId
+    const landId = ethers.solidityPackedKeccak256(
+      ["uint256", "string", "string", "string", "uint256", "uint256"],
+      [landArea, district, taluk, village, blockNumber, surveyNumber]
+    );
+
+    // Check if land exists on blockchain
+    const existsOnChain = await landRegistry.landExists(landId);
+    if (!existsOnChain) {
+      return res.status(400).json({ error: "Land not registered on blockchain" });
+    }
+
+    // Create land data with IPFS hash
+    const sanitizedData = {
+      ownerName,
+      landArea: parseFloat(landArea),
+      district,
+      taluk,
+      village,
+      blockNumber: parseInt(blockNumber),
+      surveyNumber: parseInt(surveyNumber),
+      walletAddress,
+      landId,
+      documentHash: ipfsHash,
+      status: "not verified"
+    };
+
+    // Save to MongoDB
     const newLand = new Land(sanitizedData);
     await newLand.save();
-    console.log("Land added successfully:", newLand);
-    res.status(201).json({ message: "Land added successfully", land: newLand });
+
+    // Clean up the uploaded file
+    fs.unlinkSync(req.file.path);
+
+    res.status(201).json({ 
+      message: "Land added successfully", 
+      land: newLand,
+      documentIpfsHash: ipfsHash
+    });
   } catch (error) {
     console.error("Error adding land:", error);
     if (error.code === 11000) {
       return res.status(400).json({ error: "Survey number already exists" });
-    }
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ error: error.message });
     }
     res.status(500).json({ error: "Failed to add land" });
   }
@@ -313,4 +324,5 @@ const acceptPurchaseRequest = async (req, res) => {
   }
 };
 
-module.exports = { getAllLands,getMarketplaceLands,addPurchaseRequest,getLandsWithPurchaseRequests ,getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory, acceptPurchaseRequest}; 
+
+module.exports = { getAllLands,getMarketplaceLands,addPurchaseRequest,getLandsWithPurchaseRequests ,getLandById, createLand, updateLandById, deleteLandById, transferLandOwnership, getLandHistory, acceptPurchaseRequest,}; 

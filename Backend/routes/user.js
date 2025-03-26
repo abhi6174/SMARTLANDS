@@ -10,6 +10,5 @@ router.route("/")
 router.route('/:id')
     .get(handleGetUserById)
     .patch(handleUpdateUserById)
-
-
-module.exports=router
+    
+    module.exports=router;

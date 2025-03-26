@@ -1,4 +1,3 @@
-// src/hooks/useBlockchain.js
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 const PORT = import.meta.env.VITE_PORT;
@@ -7,53 +6,60 @@ export default function useBlockchain() {
   const [account, setAccount] = useState(null);
   const [accountBalance, setAccountBalance] = useState(null);
   const [userLands, setUserLands] = useState([]);
-  const [currentUser, setcurrentUser] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const storedAccount = localStorage.getItem('connectedAccount');
-    if (!storedAccount) {
-      window.location.href = '/';
-    } else {
+    const initialize = async () => {
+      const storedAccount = localStorage.getItem('connectedAccount');
+      if (!storedAccount) {
+        window.location.href = '/';
+        return;
+      }
+      
       setAccount(storedAccount);
-      fetchAccountDetails(storedAccount);
-      fetchUserLands(storedAccount);
-    }
+      await fetchAccountDetails(storedAccount);
+      await fetchUserLands(storedAccount);
+      setIsLoading(false);
+    };
+
+    initialize();
   }, []);
 
-  // src/hooks/useBlockchain.js
-const fetchAccountDetails = async (address) => {
-  try {
-    const { ethereum } = window;
-    
-    if (ethereum) {
-      console.log("Ethereum object found");
-      const balance = await ethereum.request({
-        method: 'eth_getBalance',
-        params: [address, 'latest']
-      }); 
-      setAccountBalance(parseInt(balance, 16) / Math.pow(10, 18));
+  const fetchAccountDetails = async (address) => {
+    try {
+      const { ethereum } = window;
+      
+      if (ethereum) {
+        const balance = await ethereum.request({
+          method: 'eth_getBalance',
+          params: [address, 'latest']
+        });
+        setAccountBalance(parseInt(balance, 16) / Math.pow(10, 18));
+      }
+
+      const response = await axios.get(`http://localhost:${PORT}/api/users`);
+      const user = response.data.find(user => 
+        user.walletAddress?.toLowerCase() === address?.toLowerCase()
+      );
+      setCurrentUser(user || null);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching account details:', err);
     }
-    let response = await axios.get(`http://localhost:${PORT}/api/users`);
-    let allUsers = response.data;
-    let user = allUsers.find(user => user.walletAddress.toLowerCase() === address.toLowerCase());
-    setcurrentUser(user || null);
-    console.log("Fetched user details")
-  } catch (error) {
-    console.error('Error fetching account details:', error);
-  }
-};
+  };
 
   const fetchUserLands = async (address) => {
     setIsLoading(true);
     try {
       const response = await axios.get(`http://localhost:${PORT}/api/lands`, {
-        params: { owner: address } // Filter by owner
+        params: { owner: address }
       });
       setUserLands(response.data);
-    } catch (error) {
-      console.error('Error fetching user lands:', error);
-      setUserLands([]);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching user lands:', err);
     } finally {
       setIsLoading(false);
     }
@@ -68,12 +74,11 @@ const fetchAccountDetails = async (address) => {
           params: [{ eth_accounts: {} }]
         });
       }
-      localStorage.setItem('forceLogin', 'true');
       localStorage.removeItem('connectedAccount');
-      setAccount(null);
       window.location.href = '/';
-    } catch (error) {
-      console.error('Error logging out:', error);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error logging out:', err);
     }
   };
 
@@ -83,6 +88,7 @@ const fetchAccountDetails = async (address) => {
     userLands,
     isLoading,
     currentUser,
+    error,
     fetchUserLands,
     handleLogout,
     setUserLands

@@ -12,7 +12,36 @@ import LandMarketplace from "../components/LandMarketplace";
 const UserPage = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { account, fetchUserLands } = useBlockchain();
+  const { account, currentUser, isLoading, error } = useBlockchain();
+
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner"></div>
+        <p>Loading application data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-screen">
+        <h2>Error Loading Application</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Try Again</button>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="error-screen">
+        <h2>User Not Found</h2>
+        <p>No user data available for the connected wallet</p>
+        <button onClick={() => window.location.href = '/'}>Return to Login</button>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
@@ -24,12 +53,14 @@ const UserPage = () => {
       
       <main className="main-content">
         <header className="content-header">
-          <h2>{activePage === 'dashboard' ? 'Dashboard' : 
-               activePage === 'mylands' ? 'My Properties' : 
-               activePage === 'profile' ? 'My Profile' : 
-               activePage === 'marketplace' ? 'Land Marketplace' : 
-               activePage === 'purchase-requests' ? 'Purchase Requests' : 
-               'Account Settings'}</h2>
+          <h2>
+            {activePage === 'dashboard' ? 'Dashboard' : 
+             activePage === 'mylands' ? 'My Properties' : 
+             activePage === 'profile' ? 'My Profile' : 
+             activePage === 'marketplace' ? 'Land Marketplace' : 
+             activePage === 'purchase-requests' ? 'Purchase Requests' : 
+             'Account Settings'}
+          </h2>
           <p className="blockchain-network">Network: Ethereum Testnet</p>
         </header>
 
@@ -39,12 +70,6 @@ const UserPage = () => {
           {activePage === 'profile' && <MyProfile />}
           {activePage === 'marketplace' && <LandMarketplace />}
           {activePage === 'purchase-requests' && <PurchaseRequests />}
-          {activePage === 'settings' && (
-            <div className="placeholder-content">
-              <h3>Account Settings</h3>
-              <p>Account preferences and blockchain settings.</p>
-            </div>
-          )}
         </div>
       </main>
 
@@ -52,7 +77,7 @@ const UserPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         account={account}
-        fetchUserLands={fetchUserLands}
+        fetchUserLands={() => fetchUserLands(account)}
       />
     </div>
   );

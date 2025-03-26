@@ -1,7 +1,5 @@
-// File: backend/routes/land.js
-
 const express = require('express');
-const router = express.Router();
+const router = express.Router();// Import the upload middleware
 const {
   getAllLands,
   getMarketplaceLands,
@@ -14,11 +12,23 @@ const {
   deleteLandById,
   addPurchaseRequest,
   acceptPurchaseRequest,
+  // New controller function for document uploads
 } = require("../controllers/land");
 
-// Define the /marketplace route BEFORE the /:id route
+
+// Marketplace routes
 router.get("/marketplace", getMarketplaceLands);
 router.get("/getpurchase-requests", getLandsWithPurchaseRequests);
+
+// Purchase request routes
+router.post("/purchase-request", addPurchaseRequest);
+router.post("/accept-purchase-request", acceptPurchaseRequest);
+
+// Land transfer routes
+router.post("/transfer", transferLandOwnership);
+router.get("/history/:landId", getLandHistory);
+
+// CRUD routes
 router.route("/")
   .get(getAllLands)
   .post(createLand);
@@ -28,9 +38,4 @@ router.route("/:id")
   .put(updateLandById)
   .delete(deleteLandById);
 
-router.post("/transfer", transferLandOwnership);
-module.exports = router;
-router.get("/history/:landId", getLandHistory);
-router.post("/purchase-request", addPurchaseRequest);
-router.post("/accept-purchase-request", acceptPurchaseRequest);
 module.exports = router;

@@ -1,0 +1,52 @@
+/* src/styles/DocumentViewerModal.css */
+.document-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .document-modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .close-button {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .document-viewer {
+    width: 100%;
+    height: 70vh;
+    border: 1px solid #ddd;
+    margin: 1rem 0;
+  }
+  
+  .document-actions {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .open-external {
+    padding: 0.5rem 1rem;
+    background: #4a89dc;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+  }

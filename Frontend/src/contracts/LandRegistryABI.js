@@ -31,13 +31,19 @@ const LandRegistryABI= [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "bytes32",
         "name": "landId",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "newDocumentHash",
+        "type": "string"
       }
     ],
-    "name": "Debug",
+    "name": "DocumentUpdated",
     "type": "event"
   },
   {
@@ -59,6 +65,12 @@ const LandRegistryABI= [
         "indexed": false,
         "internalType": "string",
         "name": "ownerName",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "documentHash",
         "type": "string"
       }
     ],
@@ -120,56 +132,68 @@ const LandRegistryABI= [
     "name": "getLand",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "ownerName",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "landArea",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "district",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "taluk",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "village",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "blockNumber",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "surveyNumber",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "ownerAddress",
-            "type": "address"
-          },
-          {
-            "internalType": "bool",
-            "name": "exists",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct LandRegistry.Land",
+        "internalType": "string",
         "name": "",
-        "type": "tuple"
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      }
+    ],
+    "name": "getLandsByOwner",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
       }
     ],
     "stateMutability": "view",
@@ -248,6 +272,11 @@ const LandRegistryABI= [
         "internalType": "bool",
         "name": "exists",
         "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "documentHash",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -261,6 +290,30 @@ const LandRegistryABI= [
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "ownerLands",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -302,6 +355,11 @@ const LandRegistryABI= [
         "internalType": "uint256",
         "name": "_surveyNumber",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_documentHash",
+        "type": "string"
       }
     ],
     "name": "registerLand",
@@ -346,6 +404,24 @@ const LandRegistryABI= [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_landId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "_newDocumentHash",
+        "type": "string"
+      }
+    ],
+    "name": "updateDocumentHash",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
-  ]
+]
   export default LandRegistryABI;
