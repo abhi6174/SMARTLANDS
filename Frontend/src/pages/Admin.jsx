@@ -8,8 +8,6 @@ import { ethers } from "ethers";
 import LandRegistryABI from "../contracts/LandRegistryABI";
 const PORT = import.meta.env.VITE_PORT;
 
-
-// Basic Table Component since your custom one might not be working
 const SimpleTable = ({ columns, data, emptyMessage }) => {
   return (
     <div className="simple-table-container">
@@ -80,10 +78,7 @@ const AdminPage = () => {
       const [usersResponse, landsResponse] = await Promise.all([
         api.get("/admin/users"),
         api.get("/admin/lands")
-      ])
-      console.log("Users response:", usersResponse);
-      console.log("Lands response:", landsResponse);
-    ;
+      ]);
       
       setUsers(Array.isArray(usersResponse.data) ? usersResponse.data : usersResponse.data?.data || []);
       setLands(Array.isArray(landsResponse.data) ? landsResponse.data : landsResponse.data?.data || []);
@@ -133,43 +128,6 @@ const AdminPage = () => {
       const land = lands.find(l => l.landId === verifyDialog.landId);
       if (!land) throw new Error("Land not found");
   
-      // Debug log all parameters
-      console.log("Contract call parameters:", {
-        landId: land.landId,
-        ownerName: land.ownerName,
-        landArea: land.landArea,
-        district: land.district,
-        taluk: land.taluk,
-        village: land.village,
-        blockNumber: land.blockNumber,
-        surveyNumber: land.surveyNumber,
-        ownerAddress: land.walletAddress,
-        documentHash: land.documentHash,
-        price: ethers.parseEther(land.price.toString())
-      });
-  
-      // Estimate gas first to catch potential reverts
-      try {
-        const gasEstimate = await landRegistry.verifyAndRegisterLand.estimateGas(
-          land.landId,
-          land.ownerName,
-          land.landArea,
-          land.district,
-          land.taluk,
-          land.village,
-          land.blockNumber,
-          land.surveyNumber,
-          land.walletAddress,
-          land.documentHash,
-          ethers.parseEther(land.price.toString())
-        );
-        console.log("Gas estimate:", gasEstimate.toString());
-      } catch (estimateError) {
-        console.error("Gas estimation failed:", estimateError);
-        throw new Error("Contract validation failed: " + estimateError.reason || estimateError.message);
-      }
-  
-      // Execute transaction
       const tx = await landRegistry.verifyAndRegisterLand(
         land.landId,
         land.ownerName,
@@ -182,13 +140,11 @@ const AdminPage = () => {
         land.walletAddress,
         land.documentHash,
         ethers.parseEther(land.price.toString()),
-        { gasLimit: 500000 } // Add explicit gas limit
+        { gasLimit: 500000 }
       );
   
-      const receipt = await tx.wait();
-      console.log("Transaction mined:", receipt);
+      await tx.wait();
   
-      // Update backend
       const response = await api.post("/lands/verify", {
         landId: verifyDialog.landId,
         action: verifyDialog.action,
@@ -203,27 +159,8 @@ const AdminPage = () => {
         setAdminComments("");
       }
     } catch (error) {
-      let errorMessage = error.message;
-  
-      // Try to decode custom error
-      if (error.data) {
-        try {
-          const iface = new ethers.Interface(LandRegistryABI);
-          const decodedError = iface.parseError(error.data);
-          errorMessage = decodedError?.name || errorMessage;
-        } catch (decodeError) {
-          console.log("Couldn't decode error:", decodeError);
-        }
-      }
-      
-      setError(errorMessage);
-      console.error("Full error details:", {
-        message: error.message,
-        data: error.data,
-        code: error.code,
-        stack: error.stack
-      });
-        }
+      setError(error.message);
+    }
   };
 
   const filteredData = activeTab === "users" 
@@ -239,6 +176,143 @@ const AdminPage = () => {
   if (isLoading) {
     return <div className="loading-spinner"></div>;
   }
+
+  const landColumns = [
+    { 
+      header: "Land ID", 
+      accessor: "landId",
+      render: (val) => val ? `${val.slice(0,8)}...` : "N/A"
+    },
+    {
+      header: "Owner",
+      accessor: "ownerName",
+      render: (val, row) => (
+        <div>
+          <div>{val || "N/A"}</div>
+          <small>{row.walletAddress ? `${row.walletAddress.slice(0,6)}...${row.walletAddress.slice(-4)}` : "N/A"}</small>
+        </div>
+      )
+    },
+    {
+      header: "Location",
+      accessor: "location",
+      render: (val, row) => `${row.village || ''}, ${row.taluk || ''}, ${row.district || ''}`
+    },
+    { 
+      header: "Price", 
+      accessor: "price", 
+      render: (val) => `${val || 0} MATIC` 
+    },
+    {
+      header: "Document",
+      accessor: "documentHash",
+      render: (val) => val ? (
+        <Button 
+          size="sm" 
+          variant="outline"
+          onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${val}`, '_blank')}
+        >
+          View Document
+        </Button>
+      ) : "N/A"
+    },
+    {
+      header: "Status",
+      accessor: "status",
+      render: (val) => (
+        <Badge variant={
+          val === "Verified" ? "success" :
+          val === "Rejected" ? "destructive" : "warning"
+        }>
+          {val || "Pending"}
+        </Badge>
+      )
+    },
+    {
+      header: "Actions",
+      accessor: "actions",
+      render: (val, row) => row.status === "Pending" && (
+        <div className="action-buttons">
+          <Button 
+            size="sm" 
+            onClick={() => setVerifyDialog({
+              open: true,
+              landId: row.landId,
+              action: "approve",
+              isBlockchain: !!row.walletAddress
+            })}
+          >
+            Approve
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={() => setVerifyDialog({
+              open: true,
+              landId: row.landId,
+              action: "reject",
+              isBlockchain: !!row.walletAddress
+            })}
+          >
+            Reject
+          </Button>
+        </div>
+      )
+    },
+    {
+      header: "Verification",
+      accessor: "verification",
+      render: (_, row) => (
+        <div>
+          {row.blockchainVerified && (
+            <Badge variant="success">On-chain</Badge>
+          )}
+          {row.txHash && (
+            <a 
+              href={`https://amoy.polygonscan.com/tx/${row.txHash}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tx-link"
+            >
+              View TX
+            </a>
+          )}
+        </div>
+      )
+    }
+  ];
+
+  const userColumns = [
+    { 
+      header: "Name", 
+      accessor: "name",
+      render: (val) => val || "N/A" 
+    },
+    { 
+      header: "Email", 
+      accessor: "email",
+      render: (val) => val || "N/A"
+    },
+    { 
+      header: "Wallet", 
+      accessor: "walletAddress",
+      render: (val) => val ? `${val.slice(0,6)}...${val.slice(-4)}` : "N/A"
+    },
+    {
+      header: "Role",
+      accessor: "role",
+      render: (val) => (
+        <Badge variant={val === "admin" ? "primary" : "secondary"}>
+          {val || "user"}
+        </Badge>
+      )
+    },
+    {
+      header: "Registered",
+      accessor: "createdAt",
+      render: (val) => val ? new Date(val).toLocaleDateString() : "N/A"
+    }
+  ];
 
   return (
     <div className="admin-container">
@@ -285,137 +359,15 @@ const AdminPage = () => {
 
         {activeTab === "users" ? (
           <SimpleTable
-            columns={[
-              { 
-                header: "Name", 
-                accessor: "name",
-                render: (val) => val || "N/A" 
-              },
-              { 
-                header: "Email", 
-                accessor: "email",
-                render: (val) => val || "N/A"
-              },
-              { 
-                header: "Wallet", 
-                accessor: "walletAddress",
-                render: (val) => val ? `${val.slice(0,6)}...${val.slice(-4)}` : "N/A"
-              },
-              {
-                header: "Role",
-                accessor: "role",
-                render: (val) => (
-                  <Badge variant={val === "admin" ? "primary" : "secondary"}>
-                    {val || "user"}
-                  </Badge>
-                )
-              },
-              {
-                header: "Registered",
-                accessor: "createdAt",
-                render: (val) => val ? new Date(val).toLocaleDateString() : "N/A"
-              }
-            ]}
+            columns={userColumns}
             data={filteredData}
             emptyMessage="No users found"
           />
         ) : (
           <SimpleTable
-            columns={[
-              { 
-                header: "Land ID", 
-                accessor: "landId",
-                render: (val) => val ? `${val.slice(0,8)}...` : "N/A"
-              },
-              {
-                header: "Owner",
-                accessor: "ownerName",
-                render: (val, row) => (
-                  <div>
-                    <div>{val || "N/A"}</div>
-                    <small>{row.walletAddress ? `${row.walletAddress.slice(0,6)}...${row.walletAddress.slice(-4)}` : "N/A"}</small>
-                  </div>
-                )
-              },
-              {
-                header: "Location",
-                accessor: "location",
-                render: (val, row) => `${row.village || ''}, ${row.taluk || ''}, ${row.district || ''}`
-              },
-              { 
-                header: "Price", 
-                accessor: "price", 
-                render: (val) => `${val || 0} MATIC` 
-              },
-              {
-                header: "Status",
-                accessor: "status",
-                render: (val) => (
-                  <Badge variant={
-                    val === "Verified" ? "success" :
-                    val === "Rejected" ? "destructive" : "warning"
-                  }>
-                    {val || "Pending"}
-                  </Badge>
-                )
-              },
-              {
-                header: "Actions",
-                accessor: "actions",
-                render: (val, row) => row.status === "Pending" && (
-                  <div className="action-buttons">
-                    <Button 
-                      size="sm" 
-                      onClick={() => setVerifyDialog({
-                        open: true,
-                        landId: row.landId,
-                        action: "approve",
-                        isBlockchain: !!row.walletAddress
-                      })}
-                    >
-                      Approve
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => setVerifyDialog({
-                        open: true,
-                        landId: row.landId,
-                        action: "reject",
-                        isBlockchain: !!row.walletAddress
-                      })}
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                )
-              },
-              {
-                header: "Verification",
-                accessor: "verification",
-                render: (_, row) => (
-                  <div>
-                    {row.blockchainVerified && (
-                      <Badge variant="success">On-chain</Badge>
-                    )}
-                    {row.txHash && (
-                      <a 
-                        href={`https://amoy.polygonscan.com/tx/${row.txHash}`} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="tx-link"
-                      >
-                        View TX
-                      </a>
-                    )}
-                  </div>
-                )
-              }
-            ]}
-            
+            columns={landColumns}
             data={filteredData}
             emptyMessage="No pending lands found"
-        
           />
         )}
       </Card>
