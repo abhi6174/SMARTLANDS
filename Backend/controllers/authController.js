@@ -1,6 +1,7 @@
-const User = require('../models/user');
+// controllers/authController.js
+const User = require('../models/user'); // Add this import
 
-exports.checkWallet = async (req, res) => {
+async function checkWallet(req, res) {
   try {
     const { walletAddress } = req.query;
     
@@ -11,17 +12,18 @@ exports.checkWallet = async (req, res) => {
       });
     }
 
-    // Case-insensitive comparison with admin wallet
-    const isAdmin = walletAddress && process.env.ADMIN_WALLET 
-      ? walletAddress.toLowerCase() === process.env.ADMIN_WALLET.toLowerCase().trim()
-      : false;
+    // First check if it's the hardcoded admin wallet
+    const isHardcodedAdmin = process.env.ADMIN_WALLET && 
+      walletAddress.toLowerCase() === process.env.ADMIN_WALLET.toLowerCase();
 
-    // Check regular users in database
+    // Then check database
     const user = await User.findOne({ 
       walletAddress: { $regex: new RegExp(walletAddress, 'i') } 
     });
 
-    if (!user && !isAdmin) {
+    const isAdmin = isHardcodedAdmin || (user && user.role === 'admin');
+
+    if (!user && !isHardcodedAdmin) {
       return res.status(404).json({
         success: false,
         message: "Wallet not authorized",
@@ -46,4 +48,6 @@ exports.checkWallet = async (req, res) => {
       message: "Internal server error" 
     });
   }
-};
+}
+
+module.exports = { checkWallet }; // Export as CommonJS

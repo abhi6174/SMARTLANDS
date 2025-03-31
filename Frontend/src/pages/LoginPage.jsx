@@ -35,7 +35,7 @@ const LoginPage = () => {
 
   const checkWalletAuthorization = async (walletAddress) => {
     try {
-      const response = await axios.get('http://localhost:8002/api/auth/check-wallet', {
+      const response = await axios.get(`http://localhost:${PORT}/api/auth/check-wallet`, {
         params: { walletAddress }
       });
       

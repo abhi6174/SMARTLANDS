@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import '../styles/LandCard.css';
 import useBlockchain from "../hooks/useBlockchain";
 import { truncateHash } from "../utils/truncateHash";
-import DocumentViewerModal from "./DocumentViewerModal";
-import PurchaseRequests from "./PurchaseRequests";
+import { formatPrice } from "../utils/formatPrice";
+import axios from 'axios';
 
-// Add this new component at the top of the file
 const PurchaseRequestModal = ({ land, onClose, onSubmit, isProcessing, error }) => {
   const [message, setMessage] = useState('');
 
@@ -21,6 +20,7 @@ const PurchaseRequestModal = ({ land, onClose, onSubmit, isProcessing, error }) 
         <h3>Request to Purchase</h3>
         <p>Property: {land.district}, {land.village}</p>
         <p>Owner: {land.ownerName}</p>
+        <p>Price: {formatPrice(land.price)} MATIC</p>
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -30,13 +30,16 @@ const PurchaseRequestModal = ({ land, onClose, onSubmit, isProcessing, error }) 
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write your message to the property owner..."
               required
+              rows={4}
             />
           </div>
           
           {error && <div className="error-message">{error}</div>}
           
           <div className="modal-actions">
-            <button type="button" onClick={onClose}>Cancel</button>
+            <button type="button" onClick={onClose} disabled={isProcessing}>
+              Cancel
+            </button>
             <button type="submit" disabled={isProcessing}>
               {isProcessing ? 'Sending...' : 'Send Request'}
             </button>
@@ -49,21 +52,17 @@ const PurchaseRequestModal = ({ land, onClose, onSubmit, isProcessing, error }) 
 
 const LandCard = ({ land, isMarketplace }) => {
   const { account, currentUser } = useBlockchain();
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-
-  const handleViewDetails = () => {
-    console.log("Viewing details for:", land.landId);
-  };
+  const PORT = import.meta.env.VITE_PORT;
 
   const handleViewDocument = () => {
     if (!land.documentHash) {
       alert("No documents available for this property");
       return;
     }
-    setShowDocumentModal(true);
+    window.open(`https://gateway.pinata.cloud/ipfs/${land.documentHash}`, '_blank');
   };
 
   const handlePurchaseRequest = async (message) => {
@@ -71,24 +70,33 @@ const LandCard = ({ land, isMarketplace }) => {
     setError(null);
     
     try {
-      const response = await fetch('/api/lands/purchase-request', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const response = await axios.post(
+        `http://localhost:${PORT}/api/lands/purchase-request`,
+        {
           landId: land.landId,
           buyerAddress: account,
           buyerName: currentUser?.name || "Anonymous Buyer",
           message
-        }),
-      });
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      if (!response.ok) throw new Error(await response.text());
-      
-      const data = await response.json();
-      alert(`Request sent! ${data.message}`);
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Request failed");
+      }
+
+      alert(response.data.message);
       setShowPurchaseModal(false);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.error || 
+              err.response?.data?.message || 
+              err.message || 
+              "Failed to send request");
+      console.error("Purchase request error:", err);
     } finally {
       setIsProcessing(false);
     }
@@ -99,24 +107,23 @@ const LandCard = ({ land, isMarketplace }) => {
       <div className="card-header">
         <h3>{land.district}, {land.village}</h3>
         <span className="status-badge">{land.status}</span>
+        {land.price && (
+          <span className="price-badge">{formatPrice(land.price)} MATIC</span>
+        )}
       </div>
 
       <div className="card-body">
         <div className="land-details">
-          <p><span>Owner:</span> {land.ownerName || land.walletAddress}</p>
+          <p><span>Owner:</span> {land.ownerName || truncateHash(land.walletAddress)}</p>
           <p><span>Area:</span> {land.landArea} sq.ft</p>
           <p><span>Location:</span> {land.taluk}</p>
           <p><span>Survey:</span> {land.blockNumber}/{land.surveyNumber}</p>
         </div>
 
         <div className="card-footer">
-          <button className="btn view-btn" onClick={handleViewDetails}>
-            Details
-          </button>
-          
           {land.documentHash && (
             <button className="btn doc-btn" onClick={handleViewDocument}>
-              Documents
+              View Documents
             </button>
           )}
 
@@ -126,18 +133,11 @@ const LandCard = ({ land, isMarketplace }) => {
               onClick={() => setShowPurchaseModal(true)}
               disabled={!account}
             >
-              {account ? 'Purchase' : 'Connect Wallet'}
+              {account ? 'Request to Purchase' : 'Connect Wallet'}
             </button>
           )}
         </div>
       </div>
-
-      {showDocumentModal && (
-        <DocumentViewerModal
-          ipfsHash={land.documentHash}
-          onClose={() => setShowDocumentModal(false)}
-        />
-      )}
 
       {showPurchaseModal && (
         <PurchaseRequestModal

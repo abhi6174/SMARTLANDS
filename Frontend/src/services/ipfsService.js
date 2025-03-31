@@ -64,13 +64,3 @@ export const getIPFSGatewayUrl = (cid) => {
   return `https://gateway.pinata.cloud/ipfs/${cid}`;
 };
 
-export const fetchFromIPFS = async (cid) => {
-  try {
-    const response = await fetch(getIPFSGatewayUrl(cid));
-    if (!response.ok) throw new Error('Failed to fetch from IPFS');
-    return await response.blob();
-  } catch (error) {
-    console.error('IPFS fetch error:', error);
-    throw error;
-  }
-};

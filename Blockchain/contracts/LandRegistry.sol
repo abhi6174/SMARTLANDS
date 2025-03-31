@@ -14,145 +14,92 @@ contract LandRegistry is Ownable {
         uint256 surveyNumber;
         address ownerAddress;
         bool exists;
-        string documentHash; // Added document hash storage
+        string documentHash;
+        bool verified;
+        uint256 price; // Added price field
     }
 
     mapping(bytes32 => Land) public lands;
     mapping(bytes32 => bool) public landExists;
-    mapping(address => bytes32[]) public ownerLands; // Track lands by owner
+    mapping(address => bytes32[]) public ownerLands;
 
     event LandRegistered(
         bytes32 indexed landId, 
         address indexed owner, 
         string ownerName,
-        string documentHash 
+        string documentHash,
+        uint256 price
     );
-    event OwnershipTransferred(
-        bytes32 indexed landId, 
-        address indexed from, 
-        address indexed to
-    );
-    event DocumentUpdated(bytes32 indexed landId, string newDocumentHash);
+    event LandVerified(bytes32 indexed landId);
+    event OwnershipTransferred(bytes32 indexed landId, address indexed from, address indexed to, uint256 price);
 
     constructor() Ownable(msg.sender) {}
+// Add this modifier to restrict land verification to admin/owner
+modifier onlyAdmin() {
+    require(msg.sender == owner(), "Only admin can verify lands");
+    _;
+}
 
-    function registerLand(
-        string memory _ownerName,
-        uint256 _landArea,
-        string memory _district,
-        string memory _taluk,
-        string memory _village,
-        uint256 _blockNumber,
-        uint256 _surveyNumber,
-        string memory _documentHash // Added document hash parameter
-    ) external {
-        bytes32 landId = keccak256(
-            abi.encodePacked(
-                _landArea, 
-                _district, 
-                _taluk, 
-                _village, 
-                _blockNumber, 
-                _surveyNumber
-            )
-        );
+// Update the function signature
+function verifyAndRegisterLand(
+    bytes32 _landId,
+    string memory _ownerName,
+    uint256 _landArea,
+    string memory _district,
+    string memory _taluk,
+    string memory _village,
+    uint256 _blockNumber,
+    uint256 _surveyNumber,
+    address _ownerAddress,
+    string memory _documentHash,
+    uint256 _price
+) external onlyAdmin {  // Changed from onlyOwner to onlyAdmin
+    require(!landExists[_landId], "Land already registered");
+    require(_ownerAddress != address(0), "Invalid owner address");
+    require(_price > 0, "Price must be greater than 0");
+    
+    lands[_landId] = Land({
+        ownerName: _ownerName,
+        landArea: _landArea,
+        district: _district,
+        taluk: _taluk,
+        village: _village,
+        blockNumber: _blockNumber,
+        surveyNumber: _surveyNumber,
+        ownerAddress: _ownerAddress,
+        exists: true,
+        documentHash: _documentHash,
+        verified: true,
+        price: _price
+    });
+
+    landExists[_landId] = true;
+    ownerLands[_ownerAddress].push(_landId);
+
+    emit LandRegistered(_landId, _ownerAddress, _ownerName, _documentHash, _price);
+    emit LandVerified(_landId);
+}
+
+    function transferLandOwnership(bytes32 _landId, string memory _ownerName) external payable {
+        Land storage land = lands[_landId];
+        require(land.exists, "Land does not exist");
+        require(msg.value == land.price, "Must pay exact land price");
+        require(land.ownerAddress != msg.sender, "Cannot transfer to yourself");
         
-        require(!landExists[landId], "Land already registered");
-        require(bytes(_documentHash).length > 0, "Document hash required");
-
-        lands[landId] = Land({
-            ownerName: _ownerName,
-            landArea: _landArea,
-            district: _district,
-            taluk: _taluk,
-            village: _village,
-            blockNumber: _blockNumber,
-            surveyNumber: _surveyNumber,
-            ownerAddress: msg.sender,
-            exists: true,
-            documentHash: _documentHash
-        });
-
-        landExists[landId] = true;
-        ownerLands[msg.sender].push(landId);
-
-        emit LandRegistered(landId, msg.sender, _ownerName, _documentHash);
-    }
-
-    function transferOwnership(
-        bytes32 _landId, 
-        address _newOwner
-    ) external payable {
-        require(lands[_landId].exists, "Land does not exist");
-        require(msg.sender == lands[_landId].ownerAddress, "Only owner can transfer");
-        require(msg.value == 0.01 ether, "Must pay exactly 0.01 MATIC");
-
-        // Update owner tracking
-        _removeLandFromOwner(msg.sender, _landId);
-        ownerLands[_newOwner].push(_landId);
-
-        lands[_landId].ownerAddress = _newOwner;
+        address payable previousOwner = payable(land.ownerAddress);
+        land.ownerAddress = msg.sender;
+        land.ownerName = _ownerName;
         
-        (bool sent, ) = msg.sender.call{value: 0.01 ether}("");
-        require(sent, "Failed to send MATIC");
-
-        emit OwnershipTransferred(_landId, msg.sender, _newOwner);
+        (bool sent, ) = previousOwner.call{value: msg.value}("");
+        require(sent, "Payment transfer failed");
+        
+        emit OwnershipTransferred(_landId, previousOwner, msg.sender, land.price);
     }
-
-    function updateDocumentHash(
-        bytes32 _landId,
-        string memory _newDocumentHash
-    ) external {
-        require(lands[_landId].exists, "Land does not exist");
-        require(
-            msg.sender == lands[_landId].ownerAddress || msg.sender == owner(),
-            "Not authorized"
-        );
-        require(bytes(_newDocumentHash).length > 0, "Invalid document hash");
-
-        lands[_landId].documentHash = _newDocumentHash;
-        emit DocumentUpdated(_landId, _newDocumentHash);
-    }
-
     function getLandsByOwner(address _owner) external view returns (bytes32[] memory) {
         return ownerLands[_owner];
     }
-
-    function _removeLandFromOwner(address _owner, bytes32 _landId) private {
-        bytes32[] storage landsArray = ownerLands[_owner];
-        for (uint i = 0; i < landsArray.length; i++) {
-            if (landsArray[i] == _landId) {
-                landsArray[i] = landsArray[landsArray.length - 1];
-                landsArray.pop();
-                break;
-            }
-        }
-    }
-
-    // Added to support document hash in getLand function
-    function getLand(bytes32 _landId) external view returns (
-        string memory,
-        uint256,
-        string memory,
-        string memory,
-        string memory,
-        uint256,
-        uint256,
-        address,
-        string memory
-    ) {
+    function getLand(bytes32 _landId) external view returns (Land memory) {
         require(lands[_landId].exists, "Land does not exist");
-        Land memory land = lands[_landId];
-        return (
-            land.ownerName,
-            land.landArea,
-            land.district,
-            land.taluk,
-            land.village,
-            land.blockNumber,
-            land.surveyNumber,
-            land.ownerAddress,
-            land.documentHash
-        );
+        return lands[_landId];
     }
 }

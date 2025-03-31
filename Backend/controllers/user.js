@@ -12,17 +12,16 @@ const handleGetAllUsers = async (req, res) => {
     const users = await User.find({});
     res.status(200).json({ 
       success: true, 
-      data: users || [] // Ensure we always return an array
+      data: users || []
     });
   } catch (error) {
     res.status(500).json({ 
       success: false, 
       error: "Failed to fetch users",
-      data: [] // Return empty array on error
+      data: []
     });
   }
 };
-
 
 const handleGetUserById = async (req, res) => {
   try {
@@ -72,16 +71,6 @@ const handleCreateNewUser = async (req, res) => {
   }
 };
 
-const handleDeleteUser = async (req, res) => {
-  try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
-    if (!deletedUser) return errorResponse(res, 404, "User not found");
-    res.status(200).json({ success: true, message: "User deleted successfully" });
-  } catch (error) {
-    errorResponse(res, 500, "Failed to delete user", error);
-  }
-};
-
 const getAdminWallet = async (req, res) => {
   try {
     const adminUser = await User.findOne({ role: 'admin' });
@@ -113,7 +102,6 @@ module.exports = {
   handleGetUserById,
   handleUpdateUserById,
   handleCreateNewUser,
-  handleDeleteUser,
   getAdminWallet,
   checkUserAuthorization
 };

@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import UserPage from './pages/UserPage';
 import SignUpPage from './pages/SignUpPage';
 import AdminPage from './pages/Admin';
+import BuyerPayment from "./components/BuyerPayment";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/user" element={<UserPage />} />
         <Route path="/register" element={<SignUpPage />} />
+        <Route path="/buyer-payment" element={<BuyerPayment />} />
       </Routes>
     </Router>
   );

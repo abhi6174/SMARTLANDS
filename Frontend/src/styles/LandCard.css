@@ -45,7 +45,7 @@
 .land-card h3 {
   font-size: 1.2rem;
   margin-bottom: 10px;
-  overflow: hidden;
+  overflow: hidden; 
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 300px; 

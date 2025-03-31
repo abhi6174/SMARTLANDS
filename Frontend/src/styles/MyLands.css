@@ -5,7 +5,7 @@
   
   .register-land-button {
     padding: 10px 20px;
-    background-color: #28a745; /* Green */
+    background-color: #28a745; 
     color: white;
     border: none;
     border-radius: 4px;
@@ -14,7 +14,7 @@
   }
   
   .register-land-button:hover {
-    background-color: #218838; /* Darker green */
+    background-color: #218838; 
   }
   
   .register-land-button:disabled {

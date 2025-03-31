@@ -7,7 +7,7 @@ const Sidebar = ({ activePage, setActivePage, setIsModalOpen }) => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1>SmartLand</h1>
+        <h1>SmartLands</h1>
       </div>
       
       <nav className="sidebar-nav">
@@ -50,6 +50,15 @@ const Sidebar = ({ activePage, setActivePage, setIsModalOpen }) => {
           >
             <i className="fas fa-handshake"></i>
             <span>Purchase Requests</span>
+          </li>
+          
+          <li 
+            className={activePage === 'buyer-payment' ? 'active' : ''} 
+            onClick={() => setActivePage('buyer-payment')}
+            
+          >
+            <i className="fas fa-credit-card"></i>
+            <span>Payment</span>
           </li>
           <li 
             className={activePage === 'settings' ? 'active' : ''} 

@@ -1,18 +1,15 @@
-const express=require('express');
-const router=express.Router();
-const User =require("../models/user")
+const express = require('express');
+const router = express.Router();
 const { 
   handleGetAllUsers,
-  checkUserAuthorization,
   handleGetUserById,
-  getAdminWallet,
   handleUpdateUserById,
   handleCreateNewUser,
-  handleDeleteUser
- }=require("../controllers/user")
+  getAdminWallet,
+  checkUserAuthorization
+} = require("../controllers/user");
 
- const adminCheck = require('../middlewares/admin');
-
+const adminCheck = require('../middlewares/admin');
 
 // Regular user routes
 router.route("/")
@@ -20,21 +17,12 @@ router.route("/")
   .post(handleCreateNewUser);
 
 router.route('/:id')
-<<<<<<< HEAD
-    .get(handleGetUserById)
-    .patch(handleUpdateUserById)
-    
-    module.exports=router;
-=======
   .get(handleGetUserById)
   .patch(handleUpdateUserById);
 
 // Admin-protected routes
-router.route("/admin/users/:id")
-  .delete(adminCheck, handleDeleteUser);
-
 router.get('/admin/wallet', adminCheck, getAdminWallet);
 router.get('/check-auth', checkUserAuthorization);
+router.get('/admin/users', adminCheck, handleGetAllUsers);
 
-module.exports=router
->>>>>>> f770ea13b91d0b2e6ffea6ec0136dee18710ee81
+module.exports = router;

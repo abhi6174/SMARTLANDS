@@ -1,0 +1,27 @@
+      const { ethereum } = window;
+      if (!ethereum) {
+        throw new Error("MetaMask is not installed!");
+      }
+
+      const provider = new ethers.BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+      const landRegistry = new ethers.Contract(
+        contractAddress,
+        LandRegistryABI,
+        signer
+      );
+
+      const tx = await landRegistry.registerLand(
+        formData.ownerName,
+        formData.landArea,
+        formData.district,
+        formData.taluk,
+        formData.village,
+        formData.blockNumber,
+        formData.surveyNumber,
+        documentHash || "",
+        { gasLimit: 2000000 }
+      );
+
+      await tx.wait();
+      setSuccess("Land registered successfully!");

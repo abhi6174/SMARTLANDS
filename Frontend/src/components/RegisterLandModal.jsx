@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from 'ethers';
 import { uploadToIPFS, getIPFSGatewayUrl } from '../services/ipfsService';
-import LandRegistryABI from '../contracts/LandRegistryABI';
 import '../styles/RegisterLandModal.css';
+import axios from 'axios';
+import useBlockchain from '../hooks/useBlockchain';
 
-const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+const PORT = import.meta.env.VITE_PORT;
 
-const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
+const RegisterLandModal = ({ isOpen, onClose, fetchUserLands }) => {
+  // Import account and currentUser directly from useBlockchain
+  const { account, currentUser } = useBlockchain();
+  
   const [formData, setFormData] = useState({
-    ownerName: "",
+    ownerName: currentUser?.name || "",
     landArea: "",
-    landUnit: "SqFt",
+    landUnit: "Cent",
     district: "",
     taluk: "",
     village: "",
     blockNumber: "",
     surveyNumber: "",
-    documentHash: ''
+    documentHash: ""
   });
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -28,21 +32,28 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
     if (!isOpen) {
       // Reset form when modal closes
       setFormData({
-        ownerName: "",
+        ownerName: currentUser?.name || "",
         landArea: "",
-        landUnit: "SqFt",
+        landUnit: "Cent",
         district: "",
         taluk: "",
         village: "",
         blockNumber: "",
         surveyNumber: "",
+        price: "",
         documentHash: ''
       });
       setFile(null);
       setError(null);
       setSuccess(null);
+    } else {
+      // When modal opens, update the ownerName with current user's name
+      setFormData(prev => ({
+        ...prev,
+        ownerName: currentUser?.name || ""
+      }));
     }
-  }, [isOpen]);
+  }, [isOpen, currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,12 +66,11 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      // Validate file type and size (10MB max)
       const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 
                          'application/msword', 
                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       const isValidType = validTypes.includes(selectedFile.type);
-      const isValidSize = selectedFile.size <= 10 * 1024 * 1024; // 10MB
+      const isValidSize = selectedFile.size <= 10 * 1024 * 1024;
       
       if (isValidType && isValidSize) {
         setFile(selectedFile);
@@ -91,21 +101,18 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submission triggered");
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
 
     try {
-      // First upload document to IPFS if file is selected
       let documentHash = formData.documentHash;
       if (file && !documentHash) {
         documentHash = await uploadDocumentToIPFS();
       }
 
-      // Generate landId including document hash
       const landId = ethers.solidityPackedKeccak256(
-        ["uint256", "string", "string", "string", "uint256", "uint256", "string"],
+        ["uint256", "string", "string", "string", "uint256", "uint256"],
         [
           formData.landArea,
           formData.district,
@@ -113,47 +120,36 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
           formData.village,
           formData.blockNumber,
           formData.surveyNumber,
-          documentHash || "" // Include document hash in ID generation
         ]
       );
 
-      const { ethereum } = window;
-      if (!ethereum) {
-        throw new Error("MetaMask is not installed!");
-      }
+      const newLand = {
+        ownerName: formData.ownerName,
+        landArea: formData.landArea,
+        district: formData.district,
+        taluk: formData.taluk,
+        village: formData.village,
+        blockNumber: formData.blockNumber,
+        surveyNumber: formData.surveyNumber,
+        registrationDate: new Date().toISOString().split('T')[0],
+        status: "Pending",
+        documentHash: documentHash,
+        walletAddress: account,
+        landId: landId,
+        price:formData.price
+      };
 
-      // Connect to the smart contract
-      const provider = new ethers.BrowserProvider(ethereum);
-      const signer = await provider.getSigner();
-      const landRegistry = new ethers.Contract(
-        contractAddress,
-        LandRegistryABI,
-        signer
-      );
 
-      // Call the registerLand function in the smart contract
-      const tx = await landRegistry.registerLand(
-        formData.ownerName,
-        formData.landArea,
-        formData.district,
-        formData.taluk,
-        formData.village,
-        formData.blockNumber,
-        formData.surveyNumber,
-        documentHash || "", // Pass document hash to contract
-        { gasLimit: 2000000 }
-      );
-
-      // Wait for the transaction to be mined
-      await tx.wait();
-
-      console.log("Land registered successfully on the blockchain!");
-      setSuccess("Land registered successfully!");
       
-      // Refresh user lands
+      const response = await axios.post(`http://localhost:${PORT}/api/lands`, newLand, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      console.log('Land temporarily saved to database:', response.data);
       await fetchUserLands(account);
       
-      // Close modal after short delay
       setTimeout(() => {
         onClose();
       }, 2000);
@@ -185,8 +181,8 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
               id="ownerName"
               name="ownerName"
               value={formData.ownerName}
-              onChange={handleChange}
-              required
+              readOnly
+              className="read-only-input"
             />
           </div>
 
@@ -210,9 +206,7 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
                 value={formData.landUnit}
                 onChange={handleChange}
               >
-                <option value="SqFt">Sq. Ft</option>
-                <option value="Acres">Acres</option>
-                <option value="Hectares">Hectares</option>
+                <option value="SqFt">Cent</option>
               </select>
             </div>
           </div>
@@ -277,9 +271,21 @@ const RegisterLandModal = ({ isOpen, onClose, account, fetchUserLands }) => {
               />
             </div>
           </div>
-
           <div className="form-group">
-            <label htmlFor="landDocument">Land Document (Optional)</label>
+            <label htmlFor="price">Price (MATIC)</label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              min="0.01"
+              step="0.01"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="landDocument">Land Document </label>
             <input
               type="file"
               id="landDocument"

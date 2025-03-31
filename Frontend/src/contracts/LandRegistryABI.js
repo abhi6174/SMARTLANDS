@@ -1,5 +1,5 @@
 
-const LandRegistryABI= [
+const LandRegistryABI=[
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -37,25 +37,6 @@ const LandRegistryABI= [
         "type": "bytes32"
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "newDocumentHash",
-        "type": "string"
-      }
-    ],
-    "name": "DocumentUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "landId",
-        "type": "bytes32"
-      },
-      {
         "indexed": true,
         "internalType": "address",
         "name": "owner",
@@ -72,9 +53,28 @@ const LandRegistryABI= [
         "internalType": "string",
         "name": "documentHash",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
       }
     ],
     "name": "LandRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "landId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "LandVerified",
     "type": "event"
   },
   {
@@ -116,6 +116,12 @@ const LandRegistryABI= [
         "internalType": "address",
         "name": "to",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
       }
     ],
     "name": "OwnershipTransferred",
@@ -132,49 +138,71 @@ const LandRegistryABI= [
     "name": "getLand",
     "outputs": [
       {
-        "internalType": "string",
+        "components": [
+          {
+            "internalType": "string",
+            "name": "ownerName",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "landArea",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "district",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "taluk",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "village",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "surveyNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "ownerAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "exists",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "documentHash",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct LandRegistry.Land",
         "name": "",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -277,6 +305,16 @@ const LandRegistryABI= [
         "internalType": "string",
         "name": "documentHash",
         "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "verified",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -320,7 +358,50 @@ const LandRegistryABI= [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_landId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "_ownerName",
+        "type": "string"
+      }
+    ],
+    "name": "transferLandOwnership",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_landId",
+        "type": "bytes32"
+      },
       {
         "internalType": "string",
         "name": "_ownerName",
@@ -357,68 +438,22 @@ const LandRegistryABI= [
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "_ownerAddress",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "_documentHash",
         "type": "string"
-      }
-    ],
-    "name": "registerLand",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_landId",
-        "type": "bytes32"
       },
       {
-        "internalType": "address",
-        "name": "_newOwner",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
       }
     ],
-    "name": "transferOwnership",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "transferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_landId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "string",
-        "name": "_newDocumentHash",
-        "type": "string"
-      }
-    ],
-    "name": "updateDocumentHash",
+    "name": "verifyAndRegisterLand",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

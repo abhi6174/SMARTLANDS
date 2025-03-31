@@ -43,10 +43,10 @@ export default function useBlockchain() {
       const user = allUsers.find(user => 
         user.walletAddress?.toLowerCase() === address.toLowerCase()
       );
-      setcurrentUser(user || null);
+      setCurrentUser(user || null);
     } catch (error) {
       console.error('Error fetching account details:', error);
-      setcurrentUser(null);
+      setCurrentUser(null);
     }
   };
 
@@ -56,7 +56,6 @@ export default function useBlockchain() {
       const response = await axios.get(`http://localhost:${PORT}/api/lands`, {
         params: { owner: address }
       });
-      
       // Ensure we always set an array, even if response structure is unexpected
       setUserLands(Array.isArray(response.data?.data) ? response.data.data : []);
     } catch (error) {
@@ -90,7 +89,6 @@ export default function useBlockchain() {
     userLands,
     isLoading,
     currentUser,
-    error,
     fetchUserLands,
     handleLogout,
     setUserLands

@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import LandCard from "./LandCard";
 import useBlockchain from "../hooks/useBlockchain";
 import "../styles/LandMarketplace.css";
-const PORT = import.meta.env.VITE_PORT;
+import axios from 'axios';
+import { formatPrice } from "../utils/formatPrice";
+
 const LandMarketplace = () => {
   const { account } = useBlockchain();
   const [marketplaceLands, setMarketplaceLands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const PORT = import.meta.env.VITE_PORT;
 
   useEffect(() => {
     const fetchMarketplaceLands = async () => {
@@ -15,31 +18,55 @@ const LandMarketplace = () => {
       
       try {
         setIsLoading(true);
-        const response = await fetch(
-          `/api/lands/marketplace?owner=${encodeURIComponent(account)}`
-        );
+        setError(null);
         
-        if (!response.ok) throw new Error("Failed to fetch lands");
-        const data = await response.json();
-        setMarketplaceLands(data);
+        const response = await axios.get(
+          `http://localhost:${PORT}/api/lands/marketplace`,
+          {
+            params: { owner: account },
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          }
+        );
+
+        if (response.data && Array.isArray(response.data.data)) {
+          // Format prices before setting state
+          const formattedLands = response.data.data.map(land => ({
+            ...land,
+            price: land.price // Keep as wei - formatting happens in LandCard
+          }));
+          setMarketplaceLands(formattedLands);
+          console.log("marketplaceLands",marketplaceLands)
+        } else {
+          throw new Error("Invalid data format received");
+        }
       } catch (err) {
-        setError(err.message);
+        console.error("Error fetching marketplace lands:", err);
+        setError(err.response?.data?.error || err.message || "Failed to fetch properties");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchMarketplaceLands();
-  }, [account]);
+  }, [account, PORT]);
 
   return (
     <div className="land-marketplace">
       <h2>Available Properties</h2>
+     
       
       {isLoading ? (
         <div className="loading-spinner"></div>
       ) : error ? (
-        <div className="error-message">{error}</div>
+        <div className="error-message">
+          {error}
+          <button onClick={() => window.location.reload()} className="retry-button">
+            Try Again
+          </button>
+        </div>
       ) : marketplaceLands.length > 0 ? (
         <div className="lands-grid">
           {marketplaceLands.map((land) => (

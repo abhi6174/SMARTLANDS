@@ -2,19 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const userRouter = require("./routes/user");
 const landRouter = require("./routes/land");
+const authRouter = require('./routes/authRoutes');
 const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 8002;
 const { connectMongodb } = require("./connection");
-const logReqRes = require("./middlewares");
 const adminCheck = require('./middlewares/admin');
-const authRoutes = require('./routes/authRoutes');
 
+// Database connection
 connectMongodb("mongodb://127.0.0.1:27017/smartlands")
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
 
-// Add wallet address extraction middleware
+// Middleware
 app.use((req, res, next) => {
   const walletAddress = req.headers['wallet-address'];
   if (walletAddress) {
@@ -26,40 +26,41 @@ app.use((req, res, next) => {
 app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
   credentials: true,
-  allowedHeaders: [
-    'Content-Type',
-     'Authorization', 
-     'Wallet-Address'
-    ],
-    exposedHeaders: [
-      'Content-Length',
-      'X-Request-Id'
-    ]
+  allowedHeaders: ['Content-Type', 'Authorization', 'Wallet-Address'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id']
 }));
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(logReqRes("log.txt"));
-app.use('/api/auth', authRoutes);
 
+// Route reorganization
+const adminLandRouter = express.Router();
+adminLandRouter.use(adminCheck);
+adminLandRouter.get('/', (req, res, next) => {
+  // Forward to the existing lands route handler
+  req.url = '/admin/lands'; // Rewrite the URL
+  landRouter(req, res, next);
+});
 
 // Routes
 app.use("/api/users", userRouter);
 app.use("/api/lands", landRouter);
+app.use('/api/auth', authRouter);
 
-// Admin routes (protected)
+// Consolidated admin routes
 app.use("/api/admin/users", adminCheck, userRouter);
-app.use("/api/admin/lands", adminCheck, landRouter);
+app.use("/api/admin/lands", adminLandRouter);
 
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
-  console.error('Error stack:', err.stack);
+  console.error('Error:', err.stack);
   res.status(err.statusCode || 500).json({
     success: false,
-    error: err.message || 'Internal Server Error',
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-   });
+    error: err.message || 'Internal Server Error'
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server started at port ${PORT}..`);
+  console.log(`Server running on port ${PORT}`);
+ 
 });

@@ -1,6 +1,6 @@
-// backend/models/land.js
 const mongoose = require('mongoose');
-const  landSchema = new mongoose.Schema({
+
+const landSchema = new mongoose.Schema({
   ownerName: { type: String, required: true },
   landArea: { type: Number, required: true },
   district: { type: String, required: true },
@@ -9,20 +9,28 @@ const  landSchema = new mongoose.Schema({
   blockNumber: { type: Number, required: true },
   surveyNumber: { type: Number, required: true },
   walletAddress: { type: String, required: true },
-  landId: { type: String, required: true, unique: true }, // Add landId field
-  registrationDate: { type: String },
-  status: { type: String, default: "not verified" },
+  documentHash: { type: String, required: true },
+  landId: { type: String, required: true, unique: true },
+  price: { type: Number, required: true }, // Added price field
+  registrationDate: { type: Date, default: Date.now },
+  status: { 
+    type: String, 
+    enum: ['Pending', 'Verified', 'Rejected', 'Sold'], 
+    default: 'Pending'
+  },
+  verificationDate: { type: Date },
+  adminComments: { type: String },
+  blockchainVerified: { type: Boolean, default: false },
+  txHash: {type:String},
   purchaseRequests: [
     {
       buyerAddress: { type: String, required: true },
       buyerName: { type: String, required: true },
-      status: { type: String, default: "pending" }, // pending, accepted, rejected
+      status: { type: String, default: "pending" },
       timestamp: { type: Date, default: Date.now },
     },
   ],
 });
-
-
-
+// In models/land.js
 const Land = mongoose.model("Land", landSchema);
 module.exports = Land;

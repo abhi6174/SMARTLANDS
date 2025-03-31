@@ -1,13 +1,13 @@
 import React from 'react';
 import useBlockchain from '../hooks/useBlockchain';
 import '../styles/MyProfile.css';
+import { truncateHash } from '../utils/truncateHash';
 
 const MyProfile = () => {
   const { account, accountBalance, currentUser } = useBlockchain();
 
   return (
     <div className="profile-content">
-      <div className="profile-details">
         <div className="profile-card">
           <h3>Account Information</h3>
           <div className="profile-info">
@@ -29,13 +29,12 @@ const MyProfile = () => {
             <p><strong>Balance:</strong> 
               {accountBalance !== null ? `${accountBalance.toFixed(4)} ETH` : 'Loading...'}
             </p>
-            <p><strong>Network:</strong> Ethereum Testnet</p>
+            <p><strong>Network:</strong> Amoy Testnet</p>
             <p><strong>Account Status:</strong> 
               <span className="status-badge">Active</span>
             </p>
           </div>
         </div>
-      </div>
     </div>
   );
 };
