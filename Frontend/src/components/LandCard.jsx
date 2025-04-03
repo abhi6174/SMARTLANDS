@@ -20,7 +20,7 @@ const PurchaseRequestModal = ({ land, onClose, onSubmit, isProcessing, error }) 
         <h3>Request to Purchase</h3>
         <p>Property: {land.district}, {land.village}</p>
         <p>Owner: {land.ownerName}</p>
-        <p>Price: {formatPrice(land.price)} MATIC</p>
+        <p>Price: {formatPrice(land.price || 0)} MATIC</p>
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -56,6 +56,9 @@ const LandCard = ({ land, isMarketplace }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const PORT = import.meta.env.VITE_PORT;
+
+  // Debugging: Log the entire land object
+  console.log("Land data:", land);
 
   const handleViewDocument = () => {
     if (!land.documentHash) {
@@ -107,9 +110,9 @@ const LandCard = ({ land, isMarketplace }) => {
       <div className="card-header">
         <h3>{land.district}, {land.village}</h3>
         <span className="status-badge">{land.status}</span>
-        {land.price && (
-          <span className="price-badge">{formatPrice(land.price)} MATIC</span>
-        )}
+        <span className="price-badge">
+          {formatPrice(land.price || 0)} MATIC
+        </span>
       </div>
 
       <div className="card-body">
@@ -141,7 +144,7 @@ const LandCard = ({ land, isMarketplace }) => {
 
       {showPurchaseModal && (
         <PurchaseRequestModal
-          land={land}
+          land={{ ...land, price: land.price || 0 }}
           onClose={() => setShowPurchaseModal(false)}
           onSubmit={handlePurchaseRequest}
           isProcessing={isProcessing}

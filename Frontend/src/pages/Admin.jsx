@@ -58,7 +58,6 @@ const AdminPage = () => {
     open: false,
     landId: null,
     action: null,
-    isBlockchain: false
   });
   const [adminComments, setAdminComments] = useState("");
 
@@ -114,52 +113,93 @@ const AdminPage = () => {
 
   const handleVerifyLand = async () => {
     try {
-      const { ethereum } = window;
-      if (!ethereum) throw new Error("MetaMask not installed");
-  
-      const provider = new ethers.BrowserProvider(ethereum);
-      const signer = await provider.getSigner();
-      const landRegistry = new ethers.Contract(
-        import.meta.env.VITE_CONTRACT_ADDRESS,
-        LandRegistryABI,
-        signer
-      );
-  
-      const land = lands.find(l => l.landId === verifyDialog.landId);
-      if (!land) throw new Error("Land not found");
-  
-      const tx = await landRegistry.verifyAndRegisterLand(
-        land.landId,
-        land.ownerName,
-        land.landArea,
-        land.district,
-        land.taluk,
-        land.village,
-        land.blockNumber,
-        land.surveyNumber,
-        land.walletAddress,
-        land.documentHash,
-        ethers.parseEther(land.price.toString()),
-        { gasLimit: 500000 }
-      );
-  
-      await tx.wait();
-  
-      const response = await api.post("/lands/verify", {
-        landId: verifyDialog.landId,
-        action: verifyDialog.action,
-        adminComments,
-        isBlockchain: true,
-        txHash: tx.hash
-      });
-  
-      if (response.data.success) {
+      if (verifyDialog.action === 'approve') {
+        const land = lands.find(l => l.landId === verifyDialog.landId);
+        if (!land) throw new Error("Land record not found");
+
+        // Validate all parameters
+        if (!ethers.isAddress(land.walletAddress)) {
+          throw new Error("Invalid owner address in land record");
+        }
+
+        if (isNaN(land.price) || Number(land.price) <= 0) {
+          throw new Error("Invalid land price");
+        }
+
+        const { ethereum } = window;
+        if (!ethereum) throw new Error("MetaMask not available");
+
+        const provider = new ethers.BrowserProvider(ethereum);
+        const signer = await provider.getSigner();
+        
+        // Convert landId to bytes32 format correctly
+        const landIdBytes32 = ethers.zeroPadValue(ethers.hexlify(land.landId), 32);
+        
+        const priceInWei = ethers.parseEther(land.price.toString());
+        const landAreaBigNum = ethers.toBigInt(land.landArea);
+        const blockNumberBigNum = ethers.toBigInt(land.blockNumber);
+        const surveyNumberBigNum = ethers.toBigInt(land.surveyNumber);
+
+        const contract = new ethers.Contract(
+          import.meta.env.VITE_CONTRACT_ADDRESS,
+          LandRegistryABI,
+          signer
+        );
+
+        // First check if land exists in contract
+        try {
+          const exists = await contract.landExists(landIdBytes32);
+          if (exists) throw new Error("Land already registered on blockchain");
+        } catch (err) {
+          console.error("Land check error:", err);
+          throw new Error("Failed to check land registration status");
+        }
+
+        // Attempt with higher gas limit
+        const tx = await contract.verifyAndRegisterLand(
+          landIdBytes32,
+          land.ownerName,
+          landAreaBigNum,
+          land.district,
+          land.taluk,
+          land.village,
+          blockNumberBigNum,
+          surveyNumberBigNum,
+          land.walletAddress,
+          land.documentHash,
+          priceInWei,
+          { gasLimit: 1000000 } // Increased gas limit
+        );
+
+        const receipt = await tx.wait();
+        if (!receipt.status) throw new Error("Transaction reverted");
+
+        // Update backend
+        await api.post("/lands/verify", {
+          landId: verifyDialog.landId,
+          action: "approve",
+          adminComments,
+          txHash: tx.hash
+        });
+
+        await fetchAllData();
+        setVerifyDialog({ open: false, landId: null, action: null });
+        setAdminComments("");
+        
+      } else {
+        // Rejection logic remains unchanged
+        await api.post("/lands/verify", {
+          landId: verifyDialog.landId,
+          action: "reject",
+          adminComments
+        });
         await fetchAllData();
         setVerifyDialog({ open: false, landId: null, action: null });
         setAdminComments("");
       }
     } catch (error) {
-      setError(error.message);
+      console.error("Verification failed:", error);
+      setError(error.message || "Transaction failed. See console for details.");
     }
   };
 
@@ -238,8 +278,7 @@ const AdminPage = () => {
             onClick={() => setVerifyDialog({
               open: true,
               landId: row.landId,
-              action: "approve",
-              isBlockchain: !!row.walletAddress
+              action: "approve"
             })}
           >
             Approve
@@ -250,8 +289,7 @@ const AdminPage = () => {
             onClick={() => setVerifyDialog({
               open: true,
               landId: row.landId,
-              action: "reject",
-              isBlockchain: !!row.walletAddress
+              action: "reject"
             })}
           >
             Reject
