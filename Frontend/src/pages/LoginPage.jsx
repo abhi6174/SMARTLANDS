@@ -17,6 +17,7 @@ const LoginPage = () => {
         setError("Please install MetaMask!");
         return;
       }
+      
 
       const accounts = await ethereum.request({ method: "eth_accounts" });
       const storedAccount = localStorage.getItem("connectedAccount");
@@ -155,11 +156,7 @@ const LoginPage = () => {
                     </>
                   ) : (
                     <>
-                      <img 
-                        src="/metamask-icon.png" 
-                        alt="MetaMask" 
-                        className="metamask-icon"
-                      />
+                      
                       Connect Wallet
                     </>
                   )}

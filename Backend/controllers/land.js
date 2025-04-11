@@ -59,6 +59,7 @@ const getMarketplaceLands = async (req, res) => {
           blockNumber: landDetails.blockNumber.toString(),
           surveyNumber: landDetails.surveyNumber.toString(),
           ownerAddress: decodedEvent.owner,
+          price:landDetails.price.toString(),
           status: "Verified",
         });
       }

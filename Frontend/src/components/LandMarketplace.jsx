@@ -30,7 +30,7 @@ const LandMarketplace = () => {
             }
           }
         );
-
+        console.log("response marketplaceLands",response.data)
         if (response.data && Array.isArray(response.data.data)) {
           // Format prices before setting state
           const formattedLands = response.data.data.map(land => ({
