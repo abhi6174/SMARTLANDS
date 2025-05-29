@@ -2,17 +2,15 @@
 
 SmartLands:Blockchain based land ownership and transfer system
 
-Our project is a blockchain-based land selling platform that enables secure, transparent, and decentralized transactions for land ownership. By utilizing blockchain technology and smart contracts, the platform ensures trust, eliminates intermediaries, and provides immutable land ownership records.
+Our project is a blockchain-based land selling platform that enables secure, transparent, and decentralized transactions for land ownership. By utilizing blockchain technology and smart contracts  the platform ensures trust, provides immutable land ownership records.
 
 
-Hello
 ## Features
 
 1) Ownership transfer
 2) Admin verification
-3) Ownership history
-4) Digitalized agreement
-5) Payment using tokens
+3) Land registration 
+4) Payment using tokens
 
 ## Tech Stack
 
@@ -26,7 +24,7 @@ Hello
 ## Deployment
 
 
-1) deployed on the Sepolia Ethereum test network
+1) deployed on the Polygon amoy test network
 2) Hardhat is used for deploying smart contracts and blockchain interaction.
 
 
